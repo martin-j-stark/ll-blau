@@ -626,7 +626,7 @@ function renderToday(){
   todayList.innerHTML=list.map(e=>{
     const time=e.allDay?"Ganzer Tag":`${pad(e.start.getHours())}:${pad(e.start.getMinutes())}–${pad(e.end.getHours())}:${pad(e.end.getMinutes())}`;
     const ex=isExam(e.summary);
-    return `<div class="ev${ex?" exam":""}"><div class="time">${time}</div><div><div class="t">${ex?'<span class="badge">📝 PRÜFUNG</span>':""}${esc(e.summary)}</div>${e.loc?`<div class="loc">📍 ${esc(e.loc)}</div>`:""}</div></div>`;
+    return `<div class="ev${ex?" exam":""}"><div class="time">${time}</div><div><div class="t">${esc(e.summary)}</div>${e.loc?`<div class="loc">📍 ${esc(e.loc)}</div>`:""}</div></div>`;
   }).join("");
 }
 
@@ -660,7 +660,7 @@ function renderTasks(){
     const when=days===0?"Heute":days===1?"Morgen":WD[e.start.getDay()];
     const ex=isExam(e.summary);
     html+=`<div class="task ${cls}${ex?" exam":""}"><div class="tdate"><div class="d">${pad(e.start.getDate())}</div><div class="m">${MOs[e.start.getMonth()]}</div></div>
-      <div><div class="ttitle">${ex?'<span class="badge">📝 PRÜFUNG</span>':""}${esc(title.replace(/^[\s:\-–|]+/,""))}</div>
+      <div><div class="ttitle">${esc(title.replace(/^[\s:\-–|]+/,""))}</div>
       <div class="tdesc">${when}${e.allDay?"":" · "+pad(e.start.getHours())+":"+pad(e.start.getMinutes())}${e.desc?"\n"+esc(e.desc.trim()):""}</div></div></div>`;
   }
   taskList.innerHTML=html;
