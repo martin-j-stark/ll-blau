@@ -257,10 +257,49 @@
   body.girl .badge{background:#fff07a;color:#5c0f4b;box-shadow:0 0 12px rgba(255,240,122,.6)}
   body.girl .legend i{background:#fff07a}
   body.boys .task.exam{border-left-color:#ff1f3d;background:linear-gradient(90deg,rgba(255,31,61,.35),rgba(255,31,61,.05))}
+
+  /* ---------- Weihnachtsmodus ---------- */
+  .modes button.locked{filter:grayscale(1);opacity:.45}
+  footer{position:relative}
+  .xtip{position:absolute;bottom:44px;left:50%;transform:translateX(-50%);white-space:nowrap;padding:8px 14px;border-radius:12px;
+    background:rgba(0,0,0,.75);color:#fff;font-size:14px;opacity:0;pointer-events:none;transition:opacity .3s}
+  .xtip.show{opacity:1}
+  body.xmas #fx{z-index:3}
+  #fx.snow span{bottom:auto;top:-60px;animation:snow linear infinite}
+  @keyframes snow{0%{transform:translate(0,0)}50%{transform:translate(30px,55vh)}100%{transform:translate(-10px,115vh) rotate(var(--rot,0deg))}}
+  .lights{display:none;position:fixed;top:0;left:0;right:0;height:26px;z-index:3;pointer-events:none;justify-content:space-around}
+  .lights i{width:10px;height:16px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;margin-top:8px;animation:twinkle 1.6s ease-in-out infinite}
+  .lights i:nth-child(4n+1){background:#ff3b3b;box-shadow:0 0 12px #ff3b3b}
+  .lights i:nth-child(4n+2){background:#ffd54a;box-shadow:0 0 12px #ffd54a;animation-delay:.4s}
+  .lights i:nth-child(4n+3){background:#3bff7a;box-shadow:0 0 12px #3bff7a;animation-delay:.8s}
+  .lights i:nth-child(4n+4){background:#4ab3ff;box-shadow:0 0 12px #4ab3ff;animation-delay:1.2s}
+  @keyframes twinkle{50%{opacity:.25}}
+  body.xmas .lights{display:flex}
+  body.xmas{--bg1:#04140c;--bg2:#0a2a18;--card:rgba(12,52,30,.55);--card-b:rgba(255,213,74,.3);
+    --ice:#fffaf0;--sky:#ffe08a;--cyan:#ffd54a;--blue:#d62828;--deep:#8e1414;--muted:#cfe3d4;--warn:#ffd54a;
+    background:radial-gradient(1000px 700px at 85% -10%,rgba(214,40,40,.45) 0%,transparent 60%),
+               radial-gradient(900px 700px at -10% 110%,rgba(30,120,60,.5) 0%,transparent 60%),
+               linear-gradient(160deg,#04140c,#0d2e1b 55%,#04140c)}
+  body.xmas .b1{background:#d62828;opacity:.25}body.xmas .b2{background:#1e8a4a}
+  body.xmas .gridbg{opacity:.1;background-image:radial-gradient(circle,#fff 1.2px,transparent 1.6px);background-size:40px 40px}
+  body.xmas .clock{background:linear-gradient(120deg,rgba(214,40,40,.45),rgba(12,52,30,.6))}
+  body.xmas .digital .live{color:#fff8e1;text-shadow:0 0 12px #ffd54a,0 0 40px rgba(255,180,0,.6)}
+  body.xmas .digital .ghost{color:rgba(255,224,138,.08)}
+  body.xmas .weekday{background:linear-gradient(90deg,#fff,#ffe08a);-webkit-background-clip:text;background-clip:text}
+  body.xmas .bday{background:linear-gradient(135deg,rgba(214,40,40,.6),rgba(142,20,20,.6))}
+  body.xmas #comboSel{background:linear-gradient(135deg,rgba(214,40,40,.5),rgba(30,120,60,.5));border-color:#ffd54a}
+  body.xmas #comboSel option{background:#0d2e1b}
+  body.xmas .kw{background:rgba(255,213,74,.15);border-color:rgba(255,213,74,.5)}
+  body.xmas .brand h1{background:linear-gradient(90deg,#fff,#ffe08a 50%,#ffd54a);-webkit-background-clip:text;background-clip:text}
+  body.xmas .brand h1::after{content:" 🎄";-webkit-text-fill-color:initial}
+  body.xmas .card{border-top:3px solid rgba(255,255,255,.85);box-shadow:0 -2px 12px rgba(255,255,255,.25),0 20px 50px rgba(0,8,30,.45)}
+  body.xmas .task.exam{border-left-color:#ffd54a;background:linear-gradient(90deg,rgba(255,213,74,.25),rgba(255,213,74,.05));border-color:rgba(255,213,74,.5)}
+  body.xmas .legend i{background:#ffd54a}
+  body.xmas .panel{background:linear-gradient(160deg,#0d2e1b,#04140c)}
 </style>
 </head>
 <body>
-<div id="fx"></div>
+<div id="fx"></div><div class="lights" id="lights"></div>
 <div class="blob b1"></div><div class="blob b2"></div><div class="gridbg"></div>
 
 <div class="app">
@@ -319,7 +358,7 @@
       <div class="imeta" id="infoMeta"></div>
     </section>
   </main>
-  <footer><div class="modes"><button id="mGirl" title="Girlie Mode">💖</button><button id="mBoys" title="Boys Mode">😎</button></div></footer>
+  <footer><div class="modes"><button id="mGirl" title="Girlie Mode">💖</button><button id="mBoys" title="Boys Mode">😎</button><button id="mXmas" title="Weihnachtsmodus">🎄</button></div><div class="xtip" id="xtip"></div></footer>
 </div>
 
 <!-- Login / Admin -->
@@ -749,20 +788,26 @@ sSave.onclick=()=>{
    Themen: Girlie Mode 💖 / Boys Mode 😎
    ============================================================ */
 const FX={girl:{items:["💖","✨","🌸","🦄","💕","🎀","🌷","💗"],n:18,zoom:false},
-          boys:{items:["⚡","🔥","🚀","⚽","🏀","🎮","🏎️","💥"],n:14,zoom:true}};
+          boys:{items:["⚡","🔥","🚀","⚽","🏀","🎮","🏎️","💥"],n:14,zoom:true},
+          xmas:{items:["❄️","❅","❆","❄️","⭐","🎁","❅","🔔","❆","✨"],n:34,snow:true}};
+const XMAS_FROM=new Date(2026,11,1);           // Weihnachtsmodus erst ab 1. Dezember 2026
+const xmasOpen=()=>new Date()>=XMAS_FROM;
+lights.innerHTML="<i></i>".repeat(40);
 function setMode(m){
-  document.body.classList.remove("girl","boys");
+  if(m==="xmas"&&!xmasOpen()) m="";
+  document.body.classList.remove("girl","boys","xmas");
   if(m) document.body.classList.add(m);
-  mGirl.classList.toggle("on",m==="girl"); mBoys.classList.toggle("on",m==="boys");
+  mGirl.classList.toggle("on",m==="girl"); mBoys.classList.toggle("on",m==="boys"); mXmas.classList.toggle("on",m==="xmas");
   store.set("mode",m||"");
   fx.innerHTML=""; fx.className="";
   if(!m) return;
-  const f=FX[m]; if(f.zoom) fx.className="zoom";
+  const f=FX[m]; if(f.zoom) fx.className="zoom"; if(f.snow) fx.className="snow";
   for(let i=0;i<f.n;i++){
     const e=document.createElement("span"); e.textContent=f.items[i%f.items.length];
     e.style.fontSize=(18+Math.random()*26)+"px";
     e.style.setProperty("--rot",(Math.random()*720-360)+"deg");
-    if(f.zoom){ e.style.top=(Math.random()*92)+"%"; e.style.animationDuration=(4+Math.random()*6)+"s"; }
+    if(f.snow){ e.style.left=(Math.random()*100)+"%"; e.style.fontSize=(12+Math.random()*22)+"px"; e.style.color="#fff"; e.style.animationDuration=(8+Math.random()*10)+"s"; }
+    else if(f.zoom){ e.style.top=(Math.random()*92)+"%"; e.style.animationDuration=(4+Math.random()*6)+"s"; }
     else { e.style.left=(Math.random()*100)+"%"; e.style.animationDuration=(9+Math.random()*10)+"s"; }
     e.style.animationDelay=(-Math.random()*15)+"s";
     fx.appendChild(e);
@@ -771,6 +816,18 @@ function setMode(m){
 }
 mGirl.onclick=()=>setMode(document.body.classList.contains("girl")?"":"girl");
 mBoys.onclick=()=>setMode(document.body.classList.contains("boys")?"":"boys");
+let xtipT;
+function updXmasBtn(){ mXmas.classList.toggle("locked",!xmasOpen()); }
+mXmas.onclick=()=>{
+  if(!xmasOpen()){
+    const d=Math.ceil((XMAS_FROM-dayStart(new Date()))/864e5);
+    xtip.textContent=`🎅 Noch ${d} ${d===1?"Tag":"Tage"} bis zum Weihnachtsmodus!`;
+    xtip.classList.add("show"); clearTimeout(xtipT); xtipT=setTimeout(()=>xtip.classList.remove("show"),2500);
+    return;
+  }
+  setMode(document.body.classList.contains("xmas")?"":"xmas");
+};
+updXmasBtn(); setInterval(updXmasBtn,60*1000);
 setMode(store.get("mode",""));
 
 tick(); setInterval(tick,1000);
