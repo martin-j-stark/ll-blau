@@ -448,11 +448,28 @@ function bdayName(s){
     .replace(/geb\./ig,"").replace(/[:\-–|()!]/g," ").replace(/\s+/g," ").trim();
 }
 // erkennt z. B. "MAg", "ma g", "MA-G", "Ma_g", "RZG b", "rzgB"
-const SUBJ_RE=/(?:^|[^A-Za-zÄÖÜäöü])(rzg|nt|ma|fr|en|de)\s*[-_/.]?\s*([bcgmh])(?![A-Za-zÄÖÜäöü])/gi;
+// erkennt z. B. "MAg", "ma g", "MA-G", "RZG b", "Mg:", "DEce:", "DEbe:", "DEe:", "RZGe:", "Französisch g"
+// e = erweitert → gilt für b und c (z. B. "DEce" = DEc, "DEe" = DEb + DEc)
+const SUBJ_ALIAS={rzg:"RZG",nt:"NT",ma:"MA",m:"MA",fr:"FR",en:"EN",de:"DE",deutsch:"DE",englisch:"EN","französisch":"FR",franz:"FR",mathematik:"MA",mathe:"MA"};
+const SUBJ_RE=/(?:^|[^A-Za-zÄÖÜäöü])(rzg|nt|ma|fr|en|de|deutsch|englisch|französisch|franz|mathematik|mathe|m(?=[gmh]\s*:))\s*[-_/.]?\s*([a-z]{1,2})(?![A-Za-zÄÖÜäöü])/gi;
+function nivsOf(L){
+  L=L.toLowerCase();
+  if(L.length===1) return L==="e"?["b","c"]:[L];
+  if(L.includes("e")){ const o=L.replace("e",""); if(o==="b"||o==="c") return [o]; }
+  return [];
+}
 function codesOf(text){
   const set=new Set(); let m; SUBJ_RE.lastIndex=0;
-  while((m=SUBJ_RE.exec(text))){ const s=m[1].toUpperCase(), n=m[2].toLowerCase(); if(SUBJECTS[s]&&SUBJECTS[s].includes(n)) set.add(s+n); }
+  while((m=SUBJ_RE.exec(text))){
+    const sub=SUBJ_ALIAS[m[1].toLowerCase()];
+    nivsOf(m[2]).forEach(n=>{ if(SUBJECTS[sub]&&SUBJECTS[sub].includes(n)) set.add(sub+n); });
+  }
   return set;
+}
+function stripCode(t){
+  SUBJ_RE.lastIndex=0; const m=SUBJ_RE.exec(t);
+  if(m&&m.index<=1&&nivsOf(m[2]).length) return t.slice(m.index+m[0].length).replace(/^[\s:\-–|]+/,"")||t;
+  return t;
 }
 
 /* ============================================================
@@ -547,7 +564,7 @@ function renderTasks(){
     }
     const days=Math.round((dayStart(e.start)-t0)/864e5);
     const cls=days===0?"today":(days<=2?"soon":"");
-    const title=(e.summary||"").replace(SUBJ_RE,(m,a,b)=>(a.toUpperCase()+b.toLowerCase()===code)?m.slice(0,m.search(/[A-Za-z]/)):m).trim()||e.summary;
+    const title=stripCode(e.summary||"");
     const when=days===0?"Heute":days===1?"Morgen":WD[e.start.getDay()];
     html+=`<div class="task ${cls}"><div class="tdate"><div class="d">${pad(e.start.getDate())}</div><div class="m">${MOs[e.start.getMonth()]}</div></div>
       <div><div class="ttitle">${esc(title.replace(/^[\s:\-–|]+/,""))}</div>
