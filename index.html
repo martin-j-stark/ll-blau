@@ -177,9 +177,77 @@
     .clock{flex-direction:column;align-items:flex-start}.datebox{text-align:left}
     .tasks{min-height:420px}
   }
+
+  /* ================= Themen-Schalter ================= */
+  .modes{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:40;display:flex;gap:10px;
+    padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--card-b);backdrop-filter:blur(10px)}
+  .modes button{width:42px;height:42px;border-radius:50%;border:0;background:transparent;font-size:24px;cursor:pointer;
+    transition:transform .2s;line-height:1}
+  .modes button:hover{transform:scale(1.2) rotate(-8deg)}
+  .modes button.on{background:rgba(255,255,255,.18);box-shadow:0 0 16px rgba(255,255,255,.35)}
+  .app{padding-bottom:70px}
+  #fx{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+  #fx span{position:absolute;bottom:-60px;animation:rise linear infinite;opacity:.8}
+  @keyframes rise{to{transform:translateY(-115vh) rotate(var(--rot,0deg))}}
+  #fx.zoom span{bottom:auto;left:-80px;animation:zoom linear infinite}
+  @keyframes zoom{to{transform:translateX(calc(100vw + 160px)) rotate(var(--rot,0deg))}}
+
+  /* ---------- Girlie Mode ---------- */
+  body.girl{--bg1:#2a0622;--bg2:#4a0b3d;--card:rgba(120,20,90,.38);--card-b:rgba(255,170,220,.3);
+    --ice:#fff0f8;--sky:#ffb3dc;--cyan:#ff7ac6;--blue:#ff4fa8;--deep:#c2187a;--muted:#f2b6d6;--warn:#fff07a;
+    background:radial-gradient(1100px 800px at 85% -10%,#ff4fa8 0%,transparent 55%),
+               radial-gradient(900px 700px at -10% 110%,#b23cff 0%,transparent 55%),
+               linear-gradient(160deg,#2a0622,#5c0f4b 55%,#2a0622)}
+  body.girl .b1{background:#ff5fb8}body.girl .b2{background:#c56bff}
+  body.girl .gridbg{background-image:radial-gradient(circle,#ffb3dc 1.5px,transparent 2px);background-size:34px 34px}
+  body.girl .card{border-radius:30px}
+  body.girl .clock{background:linear-gradient(120deg,rgba(255,79,168,.5),rgba(178,60,255,.4))}
+  body.girl .digital .live{color:#fff;text-shadow:0 0 12px #ff9bd2,0 0 40px #ff4fa8}
+  body.girl .digital .ghost{color:rgba(255,179,220,.1)}
+  body.girl .bday{background:linear-gradient(135deg,rgba(255,122,198,.55),rgba(197,107,255,.5))}
+  body.girl #comboSel{background:linear-gradient(135deg,rgba(255,122,198,.45),rgba(197,107,255,.45));border-color:rgba(255,170,220,.7)}
+  body.girl #comboSel option{background:#5c0f4b}
+  body.girl .kw{background:rgba(255,122,198,.2);border-color:rgba(255,122,198,.5)}
+  body.girl .logo{background:linear-gradient(135deg,#ffb3dc,#ff4fa8 55%,#b23cff);box-shadow:0 8px 30px rgba(255,79,168,.6)}
+  body.girl .brand h1{background:linear-gradient(90deg,#fff,#ffb3dc 50%,#e0a0ff);-webkit-background-clip:text;background-clip:text}
+  body.girl .brand h1::after{content:" ✨";-webkit-text-fill-color:initial}
+  body.girl .task{background:rgba(255,255,255,.08)}
+  body.girl .panel{background:linear-gradient(160deg,#5c0f4b,#2a0622)}
+
+  /* ---------- Boys Mode ---------- */
+  body.boys{--bg1:#05070a;--bg2:#0d1117;--card:rgba(20,26,34,.72);--card-b:rgba(57,255,20,.28);
+    --ice:#f3fff0;--sky:#9dff7a;--cyan:#39ff14;--blue:#ff6a00;--deep:#c43d00;--muted:#a7b6a0;--warn:#ffe000;
+    background:repeating-linear-gradient(135deg,rgba(255,106,0,.05) 0 22px,transparent 22px 44px),
+               radial-gradient(1000px 700px at 90% -10%,rgba(255,106,0,.35) 0%,transparent 60%),
+               radial-gradient(900px 700px at -10% 110%,rgba(57,255,20,.22) 0%,transparent 60%),
+               linear-gradient(160deg,#05070a,#11161d 55%,#05070a)}
+  body.boys .b1{background:#ff6a00}body.boys .b2{background:#39ff14;opacity:.2}
+  body.boys .gridbg{opacity:.12;background-image:linear-gradient(#39ff14 1px,transparent 1px),linear-gradient(90deg,#39ff14 1px,transparent 1px)}
+  body.boys .card{border-radius:6px;clip-path:polygon(0 0,calc(100% - 22px) 0,100% 22px,100% 100%,22px 100%,0 calc(100% - 22px))}
+  body.boys .card::before{content:"";position:absolute;left:0;top:0;width:60px;height:4px;background:var(--blue);box-shadow:0 0 12px var(--blue)}
+  body.boys .clock{background:linear-gradient(120deg,rgba(255,106,0,.25),rgba(20,26,34,.85) 60%)}
+  body.boys .digital .live{color:#eaffe0;text-shadow:0 0 10px #39ff14,0 0 34px #39ff14;animation:flicker 4s infinite}
+  @keyframes flicker{0%,92%,100%{opacity:1}93%{opacity:.6}95%{opacity:1}96%{opacity:.7}}
+  body.boys .digital .ghost{color:rgba(57,255,20,.07)}
+  body.boys .digital .sec{color:#ff6a00}
+  body.boys .weekday{background:linear-gradient(90deg,#fff,#ffb27a);-webkit-background-clip:text;background-clip:text;text-transform:uppercase;font-style:italic}
+  body.boys .bday{background:linear-gradient(135deg,rgba(255,106,0,.55),rgba(196,61,0,.6))}
+  body.boys #comboSel{background:linear-gradient(135deg,rgba(255,106,0,.45),rgba(30,36,44,.9));border-color:#ff6a00;border-radius:4px}
+  body.boys #comboSel option{background:#11161d}
+  body.boys .kw{border-radius:4px;background:rgba(57,255,20,.12);border-color:rgba(57,255,20,.5)}
+  body.boys .logo{border-radius:6px;background:linear-gradient(135deg,#ffe000,#ff6a00 55%,#c43d00);box-shadow:0 0 26px rgba(255,106,0,.7);transform:skewX(-8deg)}
+  body.boys .brand h1{font-style:italic;background:linear-gradient(90deg,#fff,#ffb27a 50%,#ff6a00);-webkit-background-clip:text;background-clip:text}
+  body.boys .brand h1::after{content:" ⚡";-webkit-text-fill-color:initial}
+  body.boys .task{border-radius:4px}
+  body.boys .card h2{color:#ff9a4a}
+  body.boys .panel{background:linear-gradient(160deg,#11161d,#05070a);border-radius:8px}
+  body.boys .shake{animation:shake .5s}
+  @keyframes shake{20%{transform:translate(-6px,2px)}40%{transform:translate(5px,-3px)}60%{transform:translate(-3px,3px)}80%{transform:translate(2px,-1px)}}
 </style>
 </head>
 <body>
+<div id="fx"></div>
+<div class="modes"><button id="mGirl" title="Girlie Mode">💖</button><button id="mBoys" title="Boys Mode">😎</button></div>
 <div class="blob b1"></div><div class="blob b2"></div><div class="gridbg"></div>
 
 <div class="app">
@@ -656,6 +724,35 @@ sSave.onclick=()=>{
 /* ============================================================
    Start
    ============================================================ */
+
+/* ============================================================
+   Themen: Girlie Mode 💖 / Boys Mode 😎
+   ============================================================ */
+const FX={girl:{items:["💖","✨","🌸","🦄","💕","🎀","🌷","💗"],n:18,zoom:false},
+          boys:{items:["⚡","🔥","🚀","⚽","🏀","🎮","🏎️","💥"],n:14,zoom:true}};
+function setMode(m){
+  document.body.classList.remove("girl","boys");
+  if(m) document.body.classList.add(m);
+  mGirl.classList.toggle("on",m==="girl"); mBoys.classList.toggle("on",m==="boys");
+  store.set("mode",m||"");
+  fx.innerHTML=""; fx.className="";
+  if(!m) return;
+  const f=FX[m]; if(f.zoom) fx.className="zoom";
+  for(let i=0;i<f.n;i++){
+    const e=document.createElement("span"); e.textContent=f.items[i%f.items.length];
+    e.style.fontSize=(18+Math.random()*26)+"px";
+    e.style.setProperty("--rot",(Math.random()*720-360)+"deg");
+    if(f.zoom){ e.style.top=(Math.random()*92)+"%"; e.style.animationDuration=(4+Math.random()*6)+"s"; }
+    else { e.style.left=(Math.random()*100)+"%"; e.style.animationDuration=(9+Math.random()*10)+"s"; }
+    e.style.animationDelay=(-Math.random()*15)+"s";
+    fx.appendChild(e);
+  }
+  if(m==="boys"){ const g=document.querySelector(".app"); g.classList.remove("shake"); void g.offsetWidth; g.classList.add("shake"); }
+}
+mGirl.onclick=()=>setMode(document.body.classList.contains("girl")?"":"girl");
+mBoys.onclick=()=>setMode(document.body.classList.contains("boys")?"":"boys");
+setMode(store.get("mode",""));
+
 tick(); setInterval(tick,1000);
 renderInfo(); renderAll();
 loadCalendar(); setInterval(loadCalendar,REFRESH_MIN*60*1000);
