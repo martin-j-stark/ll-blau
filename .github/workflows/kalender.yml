@@ -47,14 +47,6 @@ jobs:
           echo "::warning::Kalender konnte nicht abgerufen werden"
           rm -f _site/calendar.ics
 
-      - name: Diagnose (temporaer, ohne Namen)
-        run: |
-          f=_site/calendar.ics; [ -f "$f" ] || exit 0
-          tr -d '\r' < "$f" | grep '^SUMMARY' | cut -d: -f2- > /tmp/s.txt
-          echo "--- Geburtstag-Muster (Namen ersetzt) ---"
-          grep -iE 'geburtstag|geb\.|birthday' /tmp/s.txt | sed -E 's/[A-ZÄÖÜ][a-zäöüéè]+/N/g; s/[Gg]eburtstag|N(eburtstag)/Geburtstag/g' | sort | uniq -c | sort -rn | head
-          echo "--- erste 2 Woerter von Franz/En/De/MA/MI/BG/ERG-Titeln ---"
-          grep -iE '^(Franz|En |De |MA |MI|BG|ERG|M[gmh])' /tmp/s.txt | awk '{print $1, $2}' | sort | uniq -c | sort -rn | head -30
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
