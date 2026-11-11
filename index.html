@@ -309,9 +309,10 @@ const FALLBACK_PROXIES = [
 ];
 // Fach + Niveau – genau diese Kombinationen erscheinen im Dropdown
 const COMBOS = ["RZGb","RZGc","RZGg","NTg","NTb","NTc","MAg","MAm","MAh",
-                "FRg","FRm","FRh","ENg","ENm","ENh","DEb","DEc","DEg"];
+                "FRg","FRm","FRh","ENg","ENm","ENh","DEb","DEc","DEg",
+                "MIa","MIb","MIc","MId","BGa","BGb","BGc","BGd","ERG"];
 const SUBJECTS = {};
-COMBOS.forEach(c=>{const s=c.slice(0,-1),n=c.slice(-1);(SUBJECTS[s]=SUBJECTS[s]||[]).push(n);});
+COMBOS.forEach(c=>{const [,s,n]=c.match(/^(RZG|NT|MA|FR|EN|DE|MI|BG|ERG)(.?)$/);(SUBJECTS[s]=SUBJECTS[s]||[]).push(n);});
 const REFRESH_MIN = 10;
 
 /* ============================================================
@@ -450,8 +451,9 @@ function bdayName(s){
 // erkennt z. B. "MAg", "ma g", "MA-G", "Ma_g", "RZG b", "rzgB"
 // erkennt z. B. "MAg", "ma g", "MA-G", "RZG b", "Mg:", "DEce:", "DEbe:", "DEe:", "RZGe:", "Französisch g"
 // e = erweitert → gilt für b und c (z. B. "DEce" = DEc, "DEe" = DEb + DEc)
-const SUBJ_ALIAS={rzg:"RZG",nt:"NT",ma:"MA",m:"MA",fr:"FR",en:"EN",de:"DE",deutsch:"DE",englisch:"EN","französisch":"FR",franz:"FR",mathematik:"MA",mathe:"MA"};
-const SUBJ_RE=/(?:^|[^A-Za-zÄÖÜäöü])(rzg|nt|ma|fr|en|de|deutsch|englisch|französisch|franz|mathematik|mathe|m(?=[gmh]\s*:))\s*[-_/.]?\s*([a-z]{1,2})(?![A-Za-zÄÖÜäöü])/gi;
+const SUBJ_ALIAS={rzg:"RZG",nt:"NT",ma:"MA",m:"MA",fr:"FR",en:"EN",de:"DE",deutsch:"DE",englisch:"EN","französisch":"FR",franz:"FR",mathematik:"MA",mathe:"MA",mi:"MI",bg:"BG"};
+const ERG_RE=/(?:^|[^A-Za-zÄÖÜäöü])ERG(?![A-Za-zÄÖÜäöü])/i;
+const SUBJ_RE=/(?:^|[^A-Za-zÄÖÜäöü])(rzg|nt|ma|fr|en|de|mi|bg|deutsch|englisch|französisch|franz|mathematik|mathe|m(?=[gmh]\s*:))\s*[-_/.]?\s*([a-z]{1,2})(?![A-Za-zÄÖÜäöü])/gi;
 function nivsOf(L){
   L=L.toLowerCase();
   if(L.length===1) return L==="e"?["b","c"]:[L];
@@ -462,13 +464,16 @@ function codesOf(text){
   const set=new Set(); let m; SUBJ_RE.lastIndex=0;
   while((m=SUBJ_RE.exec(text))){
     const sub=SUBJ_ALIAS[m[1].toLowerCase()];
+    if((sub==="MI"||sub==="BG")&&m[1]!==m[1].toUpperCase()) continue; // "Mia" ist kein MIa
     nivsOf(m[2]).forEach(n=>{ if(SUBJECTS[sub]&&SUBJECTS[sub].includes(n)) set.add(sub+n); });
   }
+  if(ERG_RE.test(text)) set.add("ERG");
   return set;
 }
 function stripCode(t){
+  if(/^\s*ERG\b/i.test(t)) return t.replace(/^\s*ERG[\s:\-–|]*/i,"")||t;
   SUBJ_RE.lastIndex=0; const m=SUBJ_RE.exec(t);
-  if(m&&m.index<=1&&nivsOf(m[2]).length) return t.slice(m.index+m[0].length).replace(/^[\s:\-–|]+/,"")||t;
+  if(m&&m.index<=1&&nivsOf(m[2]).length&&!(/^(mi|bg)$/i.test(m[1])&&m[1]!==m[1].toUpperCase())) return t.slice(m.index+m[0].length).replace(/^[\s:\-–|]+/,"")||t;
   return t;
 }
 
