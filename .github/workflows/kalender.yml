@@ -34,6 +34,7 @@ jobs:
         run: |
           mkdir -p _site
           cp index.html _site/
+          cp index.html _site/timer.html
           for url in \
             "https://outlook.office365.com/owa/calendar/$ID/calendar.ics" \
             "https://outlook.office365.com/calendar/published/$ID/calendar.ics" \

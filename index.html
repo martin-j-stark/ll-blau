@@ -296,6 +296,33 @@
   body.xmas .task.exam{border-left-color:#ffd54a;background:linear-gradient(90deg,rgba(255,213,74,.25),rgba(255,213,74,.05));border-color:rgba(255,213,74,.5)}
   body.xmas .legend i{background:#ffd54a}
   body.xmas .panel{background:linear-gradient(160deg,#0d2e1b,#04140c)}
+
+  /* ---------- Timer-Seite ---------- */
+  .timers{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .tcard{padding:16px 22px}
+  .tcard h2{margin-bottom:8px}
+  .trow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .tdisp{font:700 clamp(40px,4.2vw,68px) Orbitron,monospace;letter-spacing:2px;color:#fff;text-shadow:0 0 14px var(--cyan);line-height:1}
+  .tdisp.run{color:#fff}
+  .tdisp.over{color:#ff5a6e;text-shadow:0 0 16px #ff2442;animation:pulse 1s ease-in-out infinite}
+  @keyframes pulse{50%{opacity:.55}}
+  .tbtns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .tbtns button{min-width:44px;height:44px;border-radius:12px;border:1px solid var(--card-b);background:rgba(255,255,255,.08);
+    color:var(--ice);font:700 18px Inter,sans-serif;cursor:pointer;transition:.15s}
+  .tbtns button:hover{background:rgba(255,255,255,.18)}
+  .tbtns button.go{background:linear-gradient(135deg,var(--cyan),var(--blue));color:#021433;border-color:transparent;min-width:56px}
+  .tsel{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-top:12px}
+  .tsel span{color:var(--muted);font-weight:700}
+  .tsel select{width:100%;appearance:none;-webkit-appearance:none;padding:9px 12px;border-radius:12px;border:1px solid var(--card-b);
+    background:rgba(255,255,255,.07);color:var(--ice);font:600 16px Inter,sans-serif;cursor:pointer;outline:none}
+  .tsel select option{background:var(--bg2);color:#fff}
+  .tmeta{font-size:12px;color:var(--muted);margin-top:6px}
+  body.tp .clock{padding:16px 30px}
+  body.tp .digital .ghost,body.tp .digital .live{font-size:clamp(54px,6.4vw,104px)}
+  body.tp .weekday{font-size:clamp(26px,2.8vw,44px)}
+  body.tp .grid{gap:14px} body.tp .app{gap:14px}
+  body.boys .tbtns button{border-radius:4px}
+  @media (max-width:1000px){.timers{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -358,6 +385,7 @@
       <div class="imeta" id="infoMeta"></div>
     </section>
   </main>
+  <section class="timers hidden" id="timers"></section>
   <footer><div class="modes"><button id="mGirl" title="Girlie Mode">💖</button><button id="mBoys" title="Boys Mode">😎</button><button id="mXmas" title="Weihnachtsmodus">🎄</button></div><div class="xtip" id="xtip"></div></footer>
 </div>
 
@@ -833,6 +861,83 @@ mXmas.onclick=()=>{
 };
 updXmasBtn(); setInterval(updXmasBtn,60*1000);
 setMode(store.get("mode",""));
+
+/* ============================================================
+   Timer-Seite (timer.html): 3 Timer mit Namen
+   ============================================================ */
+const TIMER_PAGE=/timer(\.html)?\/?$/i.test(location.pathname)||location.hash==="#timer";
+const TIMER_TITLES=["Ping-Pong","Gruppentisch 1","Gruppentisch 2"];
+const NAMES=["Thomas","Celine","Fabrice","Nathan","Nico","Sara","Lorin","Natalija","David","Aneesh","Andjela","Alessia","Jana",
+  "Enie","Julia 1","Samuel","Mara","Ariola","Bahoz","Selma","Yves","Adriana","Marwin","Arijan","Ruben","Jano","Lea",
+  "Cihan","Lira","Timur","Marlon","Angelos","Leonie","Emilio","Njegoš","Danija","Maja","Frieda","Raiyah","Illia",
+  "Lazar","Soraya","Emilia","Giuliano","Lina","Cheng Feng","Guilherme","Mariana","Anthony","Julia 2","Amelie","Fabian","Giuliana","Damian",
+  "Hera"].sort((a,b)=>a.localeCompare(b,"de-CH"));
+const DEF_MIN=15;
+let audioCtx=null;
+function beep(){
+  try{
+    audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    [0,.35,.7].forEach(t=>{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type="sine";o.frequency.value=880;
+      g.gain.setValueAtTime(.0001,audioCtx.currentTime+t);g.gain.exponentialRampToValueAtTime(.4,audioCtx.currentTime+t+.02);
+      g.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+t+.28);o.connect(g).connect(audioCtx.destination);o.start(audioCtx.currentTime+t);o.stop(audioCtx.currentTime+t+.3);});
+  }catch(e){}
+}
+function fmt(sec){const neg=sec<0;sec=Math.abs(sec);return (neg?"−":"")+pad(Math.floor(sec/60))+":"+pad(sec%60);}
+function initTimers(){
+  document.body.classList.add("tp");
+  timers.classList.remove("hidden");
+  const opts='<option value="">– Name –</option>'+NAMES.map(n=>`<option>${esc(n)}</option>`).join("");
+  timers.innerHTML=TIMER_TITLES.map((t,i)=>`
+    <div class="card tcard" data-i="${i}">
+      <h2>${t}</h2>
+      <div class="trow">
+        <div class="tdisp" id="td${i}">15:00</div>
+        <div class="tbtns">
+          <button data-a="minus" title="1 Minute weniger">−</button>
+          <button data-a="plus" title="1 Minute mehr">+</button>
+          <button data-a="reset" title="Zurücksetzen">↺</button>
+          <button data-a="go" class="go" id="tg${i}" title="Start / Pause">▶</button>
+        </div>
+      </div>
+      <div class="tsel"><select data-n="0">${opts}</select><span>${i===0?"vs.":"+"}</span><select data-n="1">${opts}</select></div>
+    </div>`).join("");
+  TIMER_TITLES.forEach((_,i)=>{
+    const card=timers.querySelector(`[data-i="${i}"]`);
+    const names=store.get("tn"+i,["",""]);
+    card.querySelectorAll("select").forEach(sel=>{
+      const k=+sel.dataset.n; sel.value=NAMES.includes(names[k])?names[k]:"";
+      sel.onchange=()=>{const n=store.get("tn"+i,["",""]);n[k]=sel.value;store.set("tn"+i,n);};
+    });
+    card.querySelector(".tbtns").onclick=e=>{
+      const a=e.target.dataset.a; if(!a) return;
+      const st=getT(i), now=Date.now();
+      if(a==="go"){
+        if(st.run){ st.left=Math.round((st.end-now)/1000); st.run=false; }
+        else { st.end=now+st.left*1000; st.run=true; st.beeped=st.left<=0; try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();audioCtx.resume();}catch(_){} }
+      }
+      if(a==="reset"){ st.run=false; st.left=st.dur; st.beeped=false; }
+      if(a==="plus"||a==="minus"){
+        const d=a==="plus"?60:-60;
+        if(st.run) st.end+=d*1000; else st.left=Math.max(-99*60,Math.min(99*60,st.left+d));
+        st.dur=Math.max(60,Math.min(99*60,st.dur+d));
+      }
+      store.set("t"+i,st); drawT(i);
+    };
+    drawT(i);
+  });
+  setInterval(()=>TIMER_TITLES.forEach((_,i)=>drawT(i)),250);
+}
+function getT(i){ return store.get("t"+i,{dur:DEF_MIN*60,left:DEF_MIN*60,run:false,end:0,beeped:false}); }
+function drawT(i){
+  const st=getT(i), td=document.getElementById("td"+i), tg=document.getElementById("tg"+i);
+  let ms=st.run?st.end-Date.now():st.left*1000;
+  const sec=ms>=0?Math.ceil(ms/1000):-Math.floor(-ms/1000);
+  td.textContent=fmt(sec);
+  td.classList.toggle("over",sec<0); td.classList.toggle("run",st.run);
+  tg.textContent=st.run?"❚❚":"▶";
+  if(st.run&&sec<=0&&!st.beeped){ st.beeped=true; store.set("t"+i,st); beep(); }
+}
+if(TIMER_PAGE) initTimers();
 
 tick(); setInterval(tick,1000);
 renderInfo(); renderAll();
