@@ -913,7 +913,8 @@ function initTimers(){
         if(st.run){ st.left=Math.round((st.end-now)/1000); st.run=false; }
         else { st.end=now+st.left*1000; st.run=true; st.beeped=st.left<=0; try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();audioCtx.resume();}catch(_){} }
       }
-      if(a==="reset"){ st.run=false; st.dur=DEF_MIN*60; st.left=st.dur; st.beeped=false; }
+      if(a==="reset"){ st.run=false; st.dur=DEF_MIN*60; st.left=st.dur; st.beeped=false;
+        store.set("tn"+i,["",""]); card.querySelectorAll("select").forEach(x=>x.value=""); }
       store.set("t"+i,st); drawT(i);
     };
     drawT(i);
