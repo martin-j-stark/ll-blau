@@ -99,6 +99,14 @@
   /* ---------- Tasks ---------- */
   .tasks{grid-area:tasks}
   .picker{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+  .selwrap{position:relative;max-width:340px}
+  .selwrap::after{content:"▾";position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--cyan);font-size:20px;pointer-events:none}
+  #comboSel{width:100%;appearance:none;-webkit-appearance:none;padding:12px 46px 12px 18px;border-radius:14px;cursor:pointer;
+    font:700 20px Orbitron,Inter,sans-serif;letter-spacing:1px;color:#fff;outline:none;
+    background:linear-gradient(135deg,rgba(79,216,255,.25),rgba(47,123,255,.35));border:1px solid rgba(79,216,255,.5);
+    box-shadow:0 6px 18px rgba(47,123,255,.3)}
+  #comboSel:focus{border-color:var(--cyan)}
+  #comboSel option{background:#0a2257;color:#fff;font-family:Inter,sans-serif}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
   .chip{padding:8px 14px;border-radius:12px;border:1px solid var(--card-b);background:rgba(255,255,255,.05);
     color:var(--ice);font:700 15px Inter,sans-serif;cursor:pointer;transition:.18s;user-select:none}
@@ -209,8 +217,7 @@
     <section class="card tasks">
       <h2><span class="ic">📚</span>Aufträge der nächsten Wochen</h2>
       <div class="picker">
-        <div class="chips" id="subjChips"></div>
-        <div class="chips" id="nivChips"></div>
+        <div class="selwrap"><select id="comboSel" aria-label="Fach und Niveau wählen"></select></div>
         <div class="sel-label" id="selLabel"></div>
       </div>
       <div class="list" id="taskList"></div>
@@ -300,10 +307,11 @@ const FALLBACK_PROXIES = [
   "https://api.allorigins.win/raw?url={url}",
   "https://api.codetabs.com/v1/proxy?quest={url}"
 ];
-const SUBJECTS = {
-  RZG:["b","c","g"], NT:["b","c","g"], MA:["g","m","h"],
-  FR:["g","m","h"],  EN:["g","m","h"], DE:["b","c","g"]
-};
+// Fach + Niveau – genau diese Kombinationen erscheinen im Dropdown
+const COMBOS = ["RZGb","RZGc","RZGg","NTg","NTb","NTc","MAg","MAm","MAh",
+                "FRg","FRm","FRh","ENg","ENm","ENh","DEb","DEc","DEg"];
+const SUBJECTS = {};
+COMBOS.forEach(c=>{const s=c.slice(0,-1),n=c.slice(-1);(SUBJECTS[s]=SUBJECTS[s]||[]).push(n);});
 const REFRESH_MIN = 10;
 
 /* ============================================================
@@ -457,10 +465,12 @@ async function fetchText(url){
 }
 async function loadCalendar(){
   const c=cfg(); const ics=c.calUrl.trim().replace(/calendar\.html(\?.*)?$/i,"calendar.ics");
-  const tries=[];
-  if(c.proxy) tries.push(c.proxy.replace("{url}",encodeURIComponent(ics)));
-  tries.push(ics);
-  FALLBACK_PROXIES.forEach(p=>tries.push(p.replace("{url}",encodeURIComponent(ics))));
+  const variants=[ics, ics.replace("/calendar/published/","/owa/calendar/")];
+  const tries=["calendar.ics?t="+Date.now()];   // von GitHub automatisch abgeholt (siehe .github/workflows)
+  variants.forEach(v=>{
+    if(c.proxy) tries.push(c.proxy.replace("{url}",encodeURIComponent(v)));
+    FALLBACK_PROXIES.forEach(p=>tries.push(p.replace("{url}",encodeURIComponent(v))));
+  });
   for(const u of [...new Set(tries)]){
     try{
       const t=await fetchText(u);
@@ -481,7 +491,7 @@ function setStatus(ok,txt){ calStatus.innerHTML=`<span class="status-dot ${ok?"o
    Rendering
    ============================================================ */
 const esc=s=>(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let sel=store.get("sel",{s:"DE",n:"g"});
+let selCode=store.get("combo","DEg"); if(!COMBOS.includes(selCode)) selCode=COMBOS[0];
 
 function renderAll(){ renderBirthdays(); renderToday(); renderTasks(); renderInfo(); }
 
@@ -511,18 +521,16 @@ function renderToday(){
   }).join("");
 }
 
+comboSel.innerHTML=COMBOS.map(c=>`<option value="${c}">${c}</option>`).join("");
+comboSel.onchange=()=>{selCode=comboSel.value; store.set("combo",selCode); renderTasks();};
 function renderPicker(){
-  subjChips.innerHTML=Object.keys(SUBJECTS).map(s=>`<div class="chip ${sel.s===s?"on":""}" data-s="${s}">${s}</div>`).join("");
-  if(!SUBJECTS[sel.s].includes(sel.n)) sel.n=SUBJECTS[sel.s][0];
-  nivChips.innerHTML=SUBJECTS[sel.s].map(n=>`<div class="chip niv ${sel.n===n?"on":""}" data-n="${n}">${n}</div>`).join("");
-  selLabel.innerHTML=`Ausgewählt: <b>${sel.s}${sel.n}</b> · nächste ${cfg().weeks} Wochen`;
+  comboSel.value=selCode;
+  selLabel.innerHTML=`Aufträge der nächsten ${cfg().weeks} Wochen`;
 }
-subjChips.onclick=e=>{const s=e.target.dataset.s; if(!s) return; sel.s=s; if(!SUBJECTS[s].includes(sel.n)) sel.n=SUBJECTS[s][0]; store.set("sel",sel); renderPicker(); renderTasks();};
-nivChips.onclick=e=>{const n=e.target.dataset.n; if(!n) return; sel.n=n; store.set("sel",sel); renderPicker(); renderTasks();};
 
 function renderTasks(){
   renderPicker();
-  const code=sel.s+sel.n, now=new Date(), t0=dayStart(now), t1=addDays(t0,cfg().weeks*7);
+  const code=selCode, now=new Date(), t0=dayStart(now), t1=addDays(t0,cfg().weeks*7);
   const list=expand(allEvents.filter(e=>!BDAY_RE.test(e.summary||"")&&codesOf((e.summary||"")+" "+(e.desc||"")).has(code)),t0,t1);
   if(!list.length){
     taskList.innerHTML=`<div class="empty"><span class="big">✅</span>${loadedOnce||allEvents.length?`Keine Aufträge für <b>${code}</b> in den nächsten ${cfg().weeks} Wochen.`:"Kalender wird geladen…"}</div>`;

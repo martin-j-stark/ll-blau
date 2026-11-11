@@ -1,0 +1,55 @@
+# Holt alle 15 Minuten den Outlook-Kalender und veröffentlicht ihn zusammen mit der Seite.
+# So braucht die Seite keinen fremden Proxy-Dienst.
+name: Kalender aktualisieren
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "*/15 5-18 * * 1-5"   # Mo–Fr, ca. 6–20 Uhr Schweizer Zeit
+    - cron: "0 */3 * * *"         # sonst alle 3 Stunden
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Kalender abrufen
+        env:
+          ID: cad5169b7d66437a98a4138f0e1fd5b6@schule-herisau.ar.ch/e7e66a07ec2f4ed097fa8cdecf20bc5c15907840639511666056
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          for url in \
+            "https://outlook.office365.com/owa/calendar/$ID/calendar.ics" \
+            "https://outlook.office365.com/calendar/published/$ID/calendar.ics" \
+            "https://outlook.office.com/owa/calendar/$ID/calendar.ics"; do
+            echo "Versuche $url"
+            if curl -fsSL -A "Mozilla/5.0" -m 60 "$url" -o _site/calendar.ics && grep -q "BEGIN:VCALENDAR" _site/calendar.ics; then
+              echo "OK: $(grep -c BEGIN:VEVENT _site/calendar.ics) Termine"
+              exit 0
+            fi
+          done
+          echo "::warning::Kalender konnte nicht abgerufen werden"
+          rm -f _site/calendar.ics
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
