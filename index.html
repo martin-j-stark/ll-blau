@@ -790,8 +790,9 @@ sSave.onclick=()=>{
 const FX={girl:{items:["💖","✨","🌸","🦄","💕","🎀","🌷","💗"],n:18,zoom:false},
           boys:{items:["⚡","🔥","🚀","⚽","🏀","🎮","🏎️","💥"],n:14,zoom:true},
           xmas:{items:["❄️","❅","❆","❄️","⭐","🎁","❅","🔔","❆","✨"],n:34,snow:true}};
-const XMAS_FROM=new Date(2026,11,1);           // Weihnachtsmodus erst ab 1. Dezember 2026
-const xmasOpen=()=>new Date()>=XMAS_FROM;
+const XMAS_FROM=new Date(2026,11,1);           // Weihnachtsmodus ab 1. Dezember 2026 …
+const XMAS_TO=new Date(2027,0,7);              // … bis und mit 6. Januar 2027
+const xmasOpen=()=>{const n=new Date();return n>=XMAS_FROM&&n<XMAS_TO;};
 lights.innerHTML="<i></i>".repeat(40);
 function setMode(m){
   if(m==="xmas"&&!xmasOpen()) m="";
@@ -817,11 +818,14 @@ function setMode(m){
 mGirl.onclick=()=>setMode(document.body.classList.contains("girl")?"":"girl");
 mBoys.onclick=()=>setMode(document.body.classList.contains("boys")?"":"boys");
 let xtipT;
-function updXmasBtn(){ mXmas.classList.toggle("locked",!xmasOpen()); }
+function updXmasBtn(){
+  mXmas.classList.toggle("locked",!xmasOpen());
+  if(!xmasOpen()&&document.body.classList.contains("xmas")) setMode("");
+}
 mXmas.onclick=()=>{
   if(!xmasOpen()){
     const d=Math.ceil((XMAS_FROM-dayStart(new Date()))/864e5);
-    xtip.textContent=`🎅 Noch ${d} ${d===1?"Tag":"Tage"} bis zum Weihnachtsmodus!`;
+    xtip.textContent=new Date()>=XMAS_TO?"🎄 Der Weihnachtsmodus ist vorbei – bis nächstes Jahr!":`🎅 Noch ${d} ${d===1?"Tag":"Tage"} bis zum Weihnachtsmodus!`;
     xtip.classList.add("show"); clearTimeout(xtipT); xtipT=setTimeout(()=>xtip.classList.remove("show"),2500);
     return;
   }
