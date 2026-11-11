@@ -47,6 +47,18 @@ jobs:
           echo "::warning::Kalender konnte nicht abgerufen werden"
           rm -f _site/calendar.ics
 
+      - name: Diagnose (temporaer, ohne Namen)
+        run: |
+          f=_site/calendar.ics; [ -f "$f" ] || exit 0
+          tr -d '\r' < "$f" | grep '^SUMMARY' | cut -d: -f2- > /tmp/s.txt
+          echo "Termine: $(wc -l < /tmp/s.txt)"
+          echo "Geburtstag-Treffer: $(grep -ciE 'geburtstag|geb\.|birthday|🎂' /tmp/s.txt)"
+          echo "--- Fach-Treffer (Titel) ---"
+          grep -iE '(^|[^a-zäöü])(rzg|nt|ma|fr|en|de) ?[-_/.]? ?[bcgmh]([^a-zäöü]|$)' /tmp/s.txt | grep -viE 'geburtstag|geb\.' | sort | uniq -c | sort -rn | head -40
+          echo "--- Woerter am Titelanfang (Haeufigkeit) ---"
+          awk '{print $1}' /tmp/s.txt | sort | uniq -c | sort -rn | head -25
+          echo "--- RRULE/Ganztag ---"
+          tr -d '\r' < "$f" | grep -c '^RRULE' ; tr -d '\r' < "$f" | grep -c 'VALUE=DATE:'
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
