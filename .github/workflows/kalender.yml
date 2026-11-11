@@ -47,6 +47,13 @@ jobs:
           echo "::warning::Kalender konnte nicht abgerufen werden"
           rm -f _site/calendar.ics
 
+      - name: Diagnose Kategorien (temporaer)
+        run: |
+          f=_site/calendar.ics; [ -f "$f" ] || exit 0
+          echo "CATEGORIES-Zeilen: $(tr -d '\r' < $f | grep -c '^CATEGORIES')"
+          tr -d '\r' < $f | grep '^CATEGORIES' | sort | uniq -c | sort -rn | head -20
+          echo "Felder:"; tr -d '\r' < $f | grep -oE '^[A-Z-]+[;:]' | sort | uniq -c | sort -rn | head -30
+          echo "Titel mit Pruefung/Test/LK: $(tr -d '\r' < $f | grep '^SUMMARY' | grep -ciE 'prüfung|pruefung|test|lernkontrolle|\bLK\b')"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
