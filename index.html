@@ -179,13 +179,14 @@
   }
 
   /* ================= Themen-Schalter ================= */
-  .modes{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:40;display:flex;gap:10px;
-    padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--card-b);backdrop-filter:blur(10px)}
-  .modes button{width:42px;height:42px;border-radius:50%;border:0;background:transparent;font-size:24px;cursor:pointer;
+  footer{display:flex;justify-content:center;margin-top:-6px}
+  .modes{display:flex;gap:6px;opacity:.55;transition:opacity .2s;
+    padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--card-b);backdrop-filter:blur(10px)}
+  .modes:hover{opacity:1}
+  .modes button{width:32px;height:32px;border-radius:50%;border:0;background:transparent;font-size:18px;cursor:pointer;
     transition:transform .2s;line-height:1}
   .modes button:hover{transform:scale(1.2) rotate(-8deg)}
   .modes button.on{background:rgba(255,255,255,.18);box-shadow:0 0 16px rgba(255,255,255,.35)}
-  .app{padding-bottom:70px}
   #fx{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
   #fx span{position:absolute;bottom:-60px;animation:rise linear infinite;opacity:.8}
   @keyframes rise{to{transform:translateY(-115vh) rotate(var(--rot,0deg))}}
@@ -260,12 +261,11 @@
 </head>
 <body>
 <div id="fx"></div>
-<div class="modes"><button id="mGirl" title="Girlie Mode">💖</button><button id="mBoys" title="Boys Mode">😎</button></div>
 <div class="blob b1"></div><div class="blob b2"></div><div class="gridbg"></div>
 
 <div class="app">
   <header>
-    <div class="brand"><div class="logo">LL</div><h1>LL BLAU</h1></div>
+    <div class="brand"><h1>LL BLAU</h1></div>
     <div class="head-right">
       <span id="calStatus"><span class="status-dot"></span>Kalender wird geladen…</span>
       <button class="btn" id="loginBtn">🔒 Lehrperson</button>
@@ -319,6 +319,7 @@
       <div class="imeta" id="infoMeta"></div>
     </section>
   </main>
+  <footer><div class="modes"><button id="mGirl" title="Girlie Mode">💖</button><button id="mBoys" title="Boys Mode">😎</button></div></footer>
 </div>
 
 <!-- Login / Admin -->
