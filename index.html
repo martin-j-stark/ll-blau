@@ -893,10 +893,8 @@ function initTimers(){
       <div class="trow">
         <div class="tdisp" id="td${i}">15:00</div>
         <div class="tbtns">
-          <button data-a="minus" title="1 Minute weniger">−</button>
-          <button data-a="plus" title="1 Minute mehr">+</button>
-          <button data-a="reset" title="Zurücksetzen">↺</button>
           <button data-a="go" class="go" id="tg${i}" title="Start / Pause">▶</button>
+          <button data-a="reset" title="Zurücksetzen auf 15:00">↺</button>
         </div>
       </div>
       <div class="tsel"><select data-n="0">${opts}</select><span>${i===0?"vs.":"+"}</span><select data-n="1">${opts}</select></div>
@@ -915,12 +913,7 @@ function initTimers(){
         if(st.run){ st.left=Math.round((st.end-now)/1000); st.run=false; }
         else { st.end=now+st.left*1000; st.run=true; st.beeped=st.left<=0; try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();audioCtx.resume();}catch(_){} }
       }
-      if(a==="reset"){ st.run=false; st.left=st.dur; st.beeped=false; }
-      if(a==="plus"||a==="minus"){
-        const d=a==="plus"?60:-60;
-        if(st.run) st.end+=d*1000; else st.left=Math.max(-99*60,Math.min(99*60,st.left+d));
-        st.dur=Math.max(60,Math.min(99*60,st.dur+d));
-      }
+      if(a==="reset"){ st.run=false; st.dur=DEF_MIN*60; st.left=st.dur; st.beeped=false; }
       store.set("t"+i,st); drawT(i);
     };
     drawT(i);
