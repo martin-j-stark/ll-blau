@@ -394,6 +394,30 @@
   body.light .tbtns button.go{background:linear-gradient(135deg,#1e6bff,#1546b8);color:#fff}
   body.light .tsel select{background:#fff}
   body.light .tsel select option{background:#fff;color:#0b2350}
+
+  /* ---------- Herbst / Pumpkin Mode ---------- */
+  body.autumn{--bg1:#1c0d05;--bg2:#3a1a08;--card:rgba(74,34,10,.55);--card-b:rgba(255,170,80,.3);
+    --ice:#fff4e6;--sky:#ffc078;--cyan:#ff9f1c;--blue:#e8590c;--deep:#a63c06;--muted:#e0b990;--warn:#ffd43b;
+    background:radial-gradient(1100px 800px at 85% -10%,rgba(232,89,12,.55) 0%,transparent 60%),
+               radial-gradient(900px 700px at -10% 110%,rgba(140,60,10,.6) 0%,transparent 60%),
+               linear-gradient(160deg,#1c0d05,#3d1c09 55%,#1c0d05)}
+  body.autumn .b1{background:#ff7a1a;opacity:.3}body.autumn .b2{background:#b5651d;opacity:.35}
+  body.autumn .gridbg{opacity:.08;background-image:radial-gradient(circle,#ffc078 1.4px,transparent 2px);background-size:38px 38px}
+  body.autumn .card{border-radius:24px}
+  body.autumn .clock{background:linear-gradient(120deg,rgba(232,89,12,.45),rgba(74,34,10,.6))}
+  body.autumn .digital .live{color:#fff1db;text-shadow:0 0 12px #ff9f1c,0 0 40px rgba(232,89,12,.7)}
+  body.autumn .digital .ghost{color:rgba(255,192,120,.08)}
+  body.autumn .digital .sec{color:#ffd43b}
+  body.autumn .weekday{background:linear-gradient(90deg,#fff4e6,#ffc078);-webkit-background-clip:text;background-clip:text}
+  body.autumn .bday{background:linear-gradient(135deg,rgba(255,159,28,.5),rgba(166,60,6,.55))}
+  body.autumn #comboSel{background:linear-gradient(135deg,rgba(255,159,28,.5),rgba(166,60,6,.55));border-color:#ff9f1c}
+  body.autumn #comboSel option{background:#3d1c09}
+  body.autumn .kw{background:rgba(255,159,28,.15);border-color:rgba(255,159,28,.5)}
+  body.autumn .brand h1{background:linear-gradient(90deg,#fff4e6,#ffc078 50%,#ff9f1c);-webkit-background-clip:text;background-clip:text}
+  body.autumn .brand h1::after{content:" 🎃";-webkit-text-fill-color:initial}
+  body.autumn .task.exam{border-left-color:#ff4d6d}
+  body.autumn .panel{background:linear-gradient(160deg,#3d1c09,#1c0d05)}
+  body.autumn .tsel select option{background:#3d1c09}
 </style>
 </head>
 <body>
@@ -468,7 +492,7 @@
     </section>
   </main>
   <section class="timers hidden" id="timers"></section>
-  <footer><div class="modes"><button id="mGirl" title="Girlie Mode">💖</button><button id="mBoys" title="Boys Mode">😎</button><button id="mXmas" title="Weihnachtsmodus">🎄</button></div><div class="xtip" id="xtip"></div></footer>
+  <footer><div class="modes"><button id="mGirl" title="Girlie Mode">💖</button><button id="mBoys" title="Boys Mode">😎</button><button id="mAut" title="Herbstmodus">🎃</button><button id="mXmas" title="Weihnachtsmodus">🎄</button></div><div class="xtip" id="xtip"></div></footer>
 </div>
 
 <!-- Login / Admin -->
@@ -980,6 +1004,7 @@ sSave.onclick=()=>{
    ============================================================ */
 const FX={girl:{items:["💖","✨","🌸","🦄","💕","🎀","🌷","💗"],n:18,zoom:false},
           boys:{items:["⚡","🔥","🚀","⚽","🏀","🎮","🏎️","💥"],n:14,zoom:true},
+          autumn:{items:["🍂","🍁","🍂","🎃","🍁","🌰","🍂","🍄","🍁","🍂"],n:26,snow:true},
           xmas:{items:["❄️","❅","❆","❄️","⭐","🎁","❅","🔔","❆","✨"],n:34,snow:true}};
 const XMAS_FROM=new Date(2026,11,1);           // Weihnachtsmodus ab 1. Dezember 2026 …
 const XMAS_TO=new Date(2027,0,7);              // … bis und mit 6. Januar 2027
@@ -987,10 +1012,10 @@ const xmasOpen=()=>{const n=new Date();return n>=XMAS_FROM&&n<XMAS_TO;};
 lights.innerHTML="<i></i>".repeat(40);
 function setMode(m){
   if(m==="xmas"&&!xmasOpen()) m="";
-  document.body.classList.remove("girl","boys","xmas");
+  document.body.classList.remove("girl","boys","xmas","autumn");
   if(m) document.body.classList.add(m);
   document.body.classList.toggle("light",!m);
-  mGirl.classList.toggle("on",m==="girl"); mBoys.classList.toggle("on",m==="boys"); mXmas.classList.toggle("on",m==="xmas");
+  mGirl.classList.toggle("on",m==="girl"); mBoys.classList.toggle("on",m==="boys"); mXmas.classList.toggle("on",m==="xmas"); mAut.classList.toggle("on",m==="autumn");
   store.set("mode",m||"");
   fx.innerHTML=""; fx.className="";
   if(!m) return;
@@ -999,7 +1024,7 @@ function setMode(m){
     const e=document.createElement("span"); e.textContent=f.items[i%f.items.length];
     e.style.fontSize=(18+Math.random()*26)+"px";
     e.style.setProperty("--rot",(Math.random()*720-360)+"deg");
-    if(f.snow){ e.style.left=(Math.random()*100)+"%"; e.style.fontSize=(12+Math.random()*22)+"px"; e.style.color="#fff"; e.style.animationDuration=(8+Math.random()*10)+"s"; }
+    if(f.snow){ e.style.left=(Math.random()*100)+"%"; e.style.fontSize=(12+Math.random()*22)+"px"; if(m==="xmas") e.style.color="#fff"; e.style.animationDuration=(8+Math.random()*10)+"s"; }
     else if(f.zoom){ e.style.top=(Math.random()*92)+"%"; e.style.animationDuration=(4+Math.random()*6)+"s"; }
     else { e.style.left=(Math.random()*100)+"%"; e.style.animationDuration=(9+Math.random()*10)+"s"; }
     e.style.animationDelay=(-Math.random()*15)+"s";
@@ -1009,6 +1034,7 @@ function setMode(m){
 }
 mGirl.onclick=()=>setMode(document.body.classList.contains("girl")?"":"girl");
 mBoys.onclick=()=>setMode(document.body.classList.contains("boys")?"":"boys");
+mAut.onclick=()=>setMode(document.body.classList.contains("autumn")?"":"autumn");
 let xtipT;
 function updXmasBtn(){
   mXmas.classList.toggle("locked",!xmasOpen());
