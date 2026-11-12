@@ -72,7 +72,7 @@
   .clock{grid-area:clock;flex-direction:row;align-items:center;justify-content:space-between;gap:30px;padding:26px 36px;
     background:linear-gradient(120deg,rgba(23,74,180,.55),rgba(10,35,95,.55))}
   .digital{position:relative;font-family:Orbitron,'Courier New',monospace;font-weight:700;line-height:1;white-space:nowrap}
-  .digital .ghost,.digital .live{font-size:clamp(70px,9.5vw,150px);letter-spacing:4px}
+  .digital .ghost,.digital .live{font-size:clamp(70px,9.5vw,150px);letter-spacing:1px}
   .digital .ghost{color:rgba(140,200,255,.07);position:absolute;inset:0}
   .digital .live{position:relative;color:#dff1ff;text-shadow:0 0 12px rgba(79,216,255,.9),0 0 40px rgba(47,123,255,.7)}
   .digital .sec{font-size:.42em;color:var(--cyan);margin-left:10px;vertical-align:top;position:relative;top:.1em}
@@ -346,6 +346,9 @@
   body.has-cinfo .clock{gap:22px}
   body.has-cinfo .weekday{font-size:clamp(26px,2.8vw,46px)}
   body.boys .cinfo{border-radius:4px} body.girl .cinfo{border-radius:26px}
+
+  .digital i{font-style:normal;display:inline-block;width:.8em;text-align:center}
+  .digital .sec{display:inline-block;width:1.9em;text-align:left}
 </style>
 </head>
 <body>
@@ -365,7 +368,7 @@
     <!-- Uhr -->
     <section class="card clock">
       <div class="digital">
-        <div class="ghost">88:88</div>
+        <div class="ghost"><i>8</i><i>8</i><span>:</span><i>8</i><i>8</i></div>
         <div class="live"><span id="hh">--</span><span class="colon">:</span><span id="mm">--</span><span class="sec" id="ss">--</span></div>
       </div>
       <div class="cinfo hidden" id="cinfo">
@@ -534,7 +537,8 @@ function mondayOf(d){const x=dayStart(d);const n=(x.getDay()+6)%7;return addDays
 let lastDay=null;
 function tick(){
   const n=new Date();
-  hh.textContent=pad(n.getHours()); mm.textContent=pad(n.getMinutes()); ss.textContent=pad(n.getSeconds());
+  const fixd=v=>pad(v).split("").map(c=>`<i>${c}</i>`).join("");   // jede Ziffer mit fester Breite → nichts wackelt
+  hh.innerHTML=fixd(n.getHours()); mm.innerHTML=fixd(n.getMinutes()); ss.innerHTML=fixd(n.getSeconds());
   if(lastDay===null||!sameDay(lastDay,n)){
     weekday.textContent=WD[n.getDay()];
     datestr.textContent=`${n.getDate()}. ${MO[n.getMonth()]} ${n.getFullYear()}`;
