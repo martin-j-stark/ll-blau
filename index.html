@@ -703,12 +703,27 @@ function renderDay(el,day,emptyTxt){
     return `<div class="ev${ex?" exam":""}"><div class="time">${time}</div><div><div class="t">${esc(e.summary)}</div>${e.loc?`<div class="loc">📍 ${esc(e.loc)}</div>`:""}</div></div>`;
   }).join("");
 }
-function nextSchoolDay(d){ let n=addDays(dayStart(d),1); while(n.getDay()===0||n.getDay()===6) n=addDays(n,1); return n; }
+// Ferien & schulfreie Tage Schule Herisau (Quelle: schuleherisau.ch/ferienplan) – jeweils erster und letzter freier Tag
+const FREE_DAYS=[
+  ["2026-12-21","2027-01-01"], // Weihnachtsferien
+  ["2027-02-01","2027-02-05"], // Sportferien
+  ["2027-03-26","2027-03-29"], // Ostern
+  ["2027-04-12","2027-04-23"], // Frühlingsferien
+  ["2027-05-06","2027-05-07"], // Auffahrt
+  ["2027-05-15","2027-05-17"], // Pfingsten
+  ["2027-05-27","2027-05-27"], // Kantonalkonferenz der Lehrpersonen
+  ["2027-07-12","2027-08-13"], // Sommerferien
+  ["2027-10-04","2027-10-22"], // Herbstferien
+  ["2027-12-20","2027-12-31"]  // Weihnachtsferien
+].map(([a,b])=>[new Date(a+"T00:00:00"),new Date(b+"T23:59:59")]);
+const isFree=d=>d.getDay()===0||d.getDay()===6||FREE_DAYS.some(([a,b])=>d>=a&&d<=b);
+function nextSchoolDay(d){ let n=addDays(dayStart(d),1); for(let i=0;i<60&&isFree(n);i++) n=addDays(n,1); return n; }
 function renderToday(){
   const now=new Date();
   renderDay(todayList,now,"Heute keine Einträge im Kalender.");
   const nx=nextSchoolDay(now), isTomorrow=sameDay(nx,addDays(dayStart(now),1));
-  tmrwTitle.textContent=isTomorrow?"Morgen":WD[nx.getDay()];
+  const far=(dayStart(nx)-dayStart(now))/864e5>3;
+  tmrwTitle.textContent=isTomorrow?"Morgen":WD[nx.getDay()]+(far?` · ${nx.getDate()}. ${MO[nx.getMonth()]}`:"");
   renderDay(tmrwList,nx,(isTomorrow?"Morgen":"Am "+WD[nx.getDay()])+" keine Einträge im Kalender.");
 }
 
