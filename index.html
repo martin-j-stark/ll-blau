@@ -53,12 +53,12 @@
 
   /* ---------- Grid ---------- */
   .grid{flex:1;min-height:0;display:grid;gap:18px;
-    grid-template-columns:1.35fr 1fr 1fr;
+    grid-template-columns:1.3fr 1fr 1fr 1fr;
     grid-template-rows:auto minmax(0,1fr);
-    grid-template-areas:"clock clock bday" "tasks today info";}
-  .grid.no-bday{grid-template-areas:"clock clock clock" "tasks today info"}
-  .grid.no-info{grid-template-areas:"clock clock bday" "tasks today today"}
-  .grid.no-bday.no-info{grid-template-areas:"clock clock clock" "tasks today today"}
+    grid-template-areas:"clock clock clock bday" "tasks today tmrw info";}
+  .grid.no-bday{grid-template-areas:"clock clock clock clock" "tasks today tmrw info"}
+  .grid.no-info{grid-template-areas:"clock clock clock bday" "tasks today tmrw tmrw"}
+  .grid.no-bday.no-info{grid-template-areas:"clock clock clock clock" "tasks today tmrw tmrw"}
 
   .card{background:var(--card);border:1px solid var(--card-b);border-radius:var(--r);
     backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
@@ -134,6 +134,7 @@
 
   /* ---------- Today ---------- */
   .today{grid-area:today}
+  .tmrw{grid-area:tmrw}
   .ev{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid rgba(140,200,255,.1)}
   .ev:last-child{border-bottom:0}
   .ev .time{font:700 15px Orbitron,sans-serif;color:var(--cyan);min-width:96px}
@@ -172,7 +173,7 @@
 
   @media (max-width:1000px){
     body{overflow:auto}.app{height:auto}
-    .grid,.grid.no-bday,.grid.no-info,.grid.no-bday.no-info{grid-template-columns:1fr;grid-template-areas:"clock" "bday" "tasks" "today" "info";grid-template-rows:auto}
+    .grid,.grid.no-bday,.grid.no-info,.grid.no-bday.no-info{grid-template-columns:1fr;grid-template-areas:"clock" "bday" "tasks" "today" "tmrw" "info";grid-template-rows:auto}
     .grid.no-bday .bday,.grid.no-info .info{display:none}
     .clock{flex-direction:column;align-items:flex-start}.datebox{text-align:left}
     .tasks{min-height:420px}
@@ -374,6 +375,12 @@
     <section class="card today">
       <h2>Heute</h2>
       <div class="list" id="todayList"></div>
+    </section>
+
+    <!-- Morgen (nächster Schultag) -->
+    <section class="card tmrw">
+      <h2 id="tmrwTitle">Morgen</h2>
+      <div class="list" id="tmrwList"></div>
     </section>
 
     <!-- Info -->
@@ -686,15 +693,23 @@ function renderBirthdays(){
   }
 }
 
-function renderToday(){
-  const t0=dayStart(new Date()), t1=addDays(t0,1);
+function renderDay(el,day,emptyTxt){
+  const t0=dayStart(day), t1=addDays(t0,1);
   const list=expand(allEvents.filter(e=>!BDAY_RE.test(e.summary||"")&&!INFO_RE.test(e.summary||"")),t0,t1);
-  if(!list.length){ todayList.innerHTML=`<div class="empty"><span class="big">☀️</span>${loadedOnce||allEvents.length?"Heute keine Einträge im Kalender.":"Kalender wird geladen…"}</div>`; return; }
-  todayList.innerHTML=list.map(e=>{
+  if(!list.length){ el.innerHTML=`<div class="empty"><span class="big">☀️</span>${loadedOnce||allEvents.length?emptyTxt:"Kalender wird geladen…"}</div>`; return; }
+  el.innerHTML=list.map(e=>{
     const time=e.allDay?"Ganzer Tag":`${pad(e.start.getHours())}:${pad(e.start.getMinutes())}–${pad(e.end.getHours())}:${pad(e.end.getMinutes())}`;
     const ex=isExam(e.summary);
     return `<div class="ev${ex?" exam":""}"><div class="time">${time}</div><div><div class="t">${esc(e.summary)}</div>${e.loc?`<div class="loc">📍 ${esc(e.loc)}</div>`:""}</div></div>`;
   }).join("");
+}
+function nextSchoolDay(d){ let n=addDays(dayStart(d),1); while(n.getDay()===0||n.getDay()===6) n=addDays(n,1); return n; }
+function renderToday(){
+  const now=new Date();
+  renderDay(todayList,now,"Heute keine Einträge im Kalender.");
+  const nx=nextSchoolDay(now), isTomorrow=sameDay(nx,addDays(dayStart(now),1));
+  tmrwTitle.textContent=isTomorrow?"Morgen":WD[nx.getDay()];
+  renderDay(tmrwList,nx,(isTomorrow?"Morgen":"Am "+WD[nx.getDay()])+" keine Einträge im Kalender.");
 }
 
 comboSel.innerHTML=COMBOS.map(c=>`<option value="${c}">${c}</option>`).join("");
