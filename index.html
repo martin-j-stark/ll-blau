@@ -349,6 +349,51 @@
 
   .digital i{font-style:normal;display:inline-block;width:.8em;text-align:center}
   .digital .sec{display:inline-block;width:1.9em;text-align:left}
+
+  /* ================= Helles Blau (Standard-Design) ================= */
+  body.light{--bg1:#eef5ff;--bg2:#dceaff;--card:rgba(255,255,255,.78);--card-b:rgba(30,90,200,.16);
+    --ice:#0b2350;--sky:#2a62c9;--cyan:#0a7fd0;--blue:#1e6bff;--deep:#1546b8;--muted:#4f6a94;--warn:#e09a00;
+    background:radial-gradient(1200px 800px at 85% -10%,#b9d6ff 0%,transparent 60%),
+               radial-gradient(900px 700px at -10% 110%,#c4e6ff 0%,transparent 60%),
+               linear-gradient(160deg,#f3f8ff,#dfeaff 55%,#eef5ff)}
+  body.light .b1{background:#8fbcff;opacity:.3}body.light .b2{background:#8fe0ff;opacity:.3}
+  body.light .gridbg{opacity:.35;background-image:linear-gradient(#bcd3f5 1px,transparent 1px),linear-gradient(90deg,#bcd3f5 1px,transparent 1px)}
+  body.light .card{box-shadow:0 14px 34px rgba(30,70,150,.13),inset 0 1px 0 #fff}
+  body.light .brand h1{background:linear-gradient(90deg,#0b2a6b,#1e6bff 70%,#0a7fd0);-webkit-background-clip:text;background-clip:text}
+  body.light .clock{background:linear-gradient(120deg,#ffffff,#e4efff)}
+  body.light .digital .live{color:#0d3b8c;text-shadow:0 0 18px rgba(30,107,255,.25)}
+  body.light .digital .ghost{color:rgba(30,90,200,.07)}
+  body.light .digital .sec{color:#1e6bff}
+  body.light .weekday{background:linear-gradient(90deg,#0b2350,#1e6bff);-webkit-background-clip:text;background-clip:text}
+  body.light .datestr{color:#2a62c9}
+  body.light .kw{background:rgba(30,107,255,.1);border-color:rgba(30,107,255,.3);color:#1e6bff}
+  body.light .bday{background:linear-gradient(135deg,#e2f1ff,#c3dcff)}
+  body.light #comboSel{background:linear-gradient(135deg,#1e6bff,#1546b8);border-color:transparent;color:#fff;box-shadow:0 6px 16px rgba(30,107,255,.3)}
+  body.light #comboSel option{background:#fff;color:#0b2350}
+  body.light .selwrap::after{color:#fff}
+  body.light .task{background:rgba(255,255,255,.85);border-color:rgba(30,90,200,.12)}
+  body.light .task.today{background:rgba(10,127,208,.09)}
+  body.light .tdate .d{color:#0b2350}
+  body.light .task.exam{background:linear-gradient(90deg,rgba(255,77,109,.18),rgba(255,77,109,.05));border-color:rgba(230,40,80,.3)}
+  body.light .task.exam .tdate .d{color:#b0002c}
+  body.light .ev{border-bottom-color:rgba(30,90,200,.12)}
+  body.light .ev.exam .t{color:#c4002f}
+  body.light .cinfo{background:rgba(255,255,255,.85)}
+  body.light .btn{background:rgba(255,255,255,.75);color:#0b2350}
+  body.light .btn.primary{background:linear-gradient(135deg,#1e6bff,#1546b8);color:#fff}
+  body.light .btn.danger{background:rgba(255,90,90,.12);color:#a3002a}
+  body.light .modes{background:rgba(255,255,255,.7)}
+  body.light .daynav button{background:#fff}
+  body.light .list::-webkit-scrollbar-thumb{background:rgba(30,90,200,.25)}
+  body.light .modal{background:rgba(10,30,80,.35)}
+  body.light .panel{background:linear-gradient(160deg,#ffffff,#eaf2ff);box-shadow:0 30px 80px rgba(10,30,80,.3)}
+  body.light .panel input[type=text],body.light .panel input[type=password],body.light .panel input[type=number],body.light .panel textarea{background:#fff}
+  body.light .tdisp{color:#0d3b8c;text-shadow:0 0 14px rgba(30,107,255,.25)}
+  body.light .tdisp.over{color:#e0213f;text-shadow:0 0 12px rgba(224,33,63,.35)}
+  body.light .tbtns button{background:#fff}
+  body.light .tbtns button.go{background:linear-gradient(135deg,#1e6bff,#1546b8);color:#fff}
+  body.light .tsel select{background:#fff}
+  body.light .tsel select option{background:#fff;color:#0b2350}
 </style>
 </head>
 <body>
@@ -944,6 +989,7 @@ function setMode(m){
   if(m==="xmas"&&!xmasOpen()) m="";
   document.body.classList.remove("girl","boys","xmas");
   if(m) document.body.classList.add(m);
+  document.body.classList.toggle("light",!m);
   mGirl.classList.toggle("on",m==="girl"); mBoys.classList.toggle("on",m==="boys"); mXmas.classList.toggle("on",m==="xmas");
   store.set("mode",m||"");
   fx.innerHTML=""; fx.className="";
