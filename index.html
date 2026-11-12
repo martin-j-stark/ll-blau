@@ -453,10 +453,56 @@
   /* Schnee */
   .wflake{position:absolute;top:-20px;width:var(--s);height:var(--s);border-radius:50%;background:#fff;
     box-shadow:0 0 6px rgba(50,90,170,.8);animation:snow linear infinite}
+
+  /* ---------- Cyber / Sci-Fi Mode ---------- */
+  #cyb,.cyfloor,.scan{display:none}
+  body.cyber #cyb{display:block;position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.55}
+  body.cyber .cyfloor{display:block;position:fixed;left:-50%;right:-50%;bottom:-10vh;height:55vh;z-index:0;pointer-events:none;
+    background-image:linear-gradient(rgba(0,240,255,.55) 2px,transparent 2px),linear-gradient(90deg,rgba(255,0,200,.45) 2px,transparent 2px);
+    background-size:80px 80px;transform:perspective(420px) rotateX(62deg);transform-origin:center top;
+    -webkit-mask-image:linear-gradient(transparent,#000 70%);mask-image:linear-gradient(transparent,#000 70%);animation:floor 2.4s linear infinite}
+  @keyframes floor{to{background-position:0 80px}}
+  body.cyber .scan{display:block;position:fixed;inset:0;z-index:30;pointer-events:none;opacity:.07;
+    background:repeating-linear-gradient(0deg,#000 0 2px,transparent 2px 4px)}
+  body.cyber{--bg1:#03010d;--bg2:#0b0420;--card:rgba(10,6,32,.72);--card-b:rgba(0,240,255,.45);
+    --ice:#e6fbff;--sky:#00f0ff;--cyan:#00f0ff;--blue:#ff00c8;--deep:#7a00ff;--muted:#8fa6c9;--warn:#fff200;
+    background:radial-gradient(1100px 700px at 50% 115%,rgba(255,0,200,.35) 0%,transparent 60%),
+               radial-gradient(900px 600px at 85% -10%,rgba(0,240,255,.22) 0%,transparent 60%),
+               linear-gradient(180deg,#03010d,#0d0326 60%,#1a0433)}
+  body.cyber .b1{background:#7a00ff;opacity:.25}body.cyber .b2{background:#00f0ff;opacity:.15}
+  body.cyber .gridbg{display:none}
+  body.cyber .card{border-radius:2px;border:1px solid rgba(0,240,255,.5);
+    box-shadow:0 0 0 1px rgba(255,0,200,.15),0 0 22px rgba(0,240,255,.25),inset 0 0 30px rgba(0,240,255,.06);
+    clip-path:polygon(0 14px,14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%)}
+  body.cyber .card::after{content:"";position:absolute;right:10px;top:10px;width:26px;height:26px;border-top:2px solid #ff00c8;border-right:2px solid #ff00c8;opacity:.9}
+  body.cyber .card h2{font-family:Orbitron,monospace;color:#00f0ff;text-shadow:0 0 8px rgba(0,240,255,.8)}
+  body.cyber .card h2::before{content:"▸ ";color:#ff00c8}
+  body.cyber .clock{background:linear-gradient(120deg,rgba(122,0,255,.3),rgba(10,6,32,.85) 55%,rgba(0,240,255,.15))}
+  body.cyber .digital .live{color:#e6fbff;text-shadow:-3px 0 0 rgba(255,0,200,.8),3px 0 0 rgba(0,240,255,.8),0 0 30px rgba(0,240,255,.8);animation:glitch 5s infinite}
+  @keyframes glitch{0%,90%,100%{transform:none}91%{transform:translate(-4px,1px) skewX(-6deg)}92%{transform:translate(4px,-1px)}93%{transform:none}96%{transform:translate(2px,0) skewX(4deg)}97%{transform:none}}
+  body.cyber .digital .ghost{color:rgba(0,240,255,.07)}
+  body.cyber .digital .sec{color:#ff00c8;text-shadow:0 0 12px #ff00c8}
+  body.cyber .weekday{font-family:Orbitron,sans-serif;text-transform:uppercase;letter-spacing:3px;background:linear-gradient(90deg,#00f0ff,#ff00c8);-webkit-background-clip:text;background-clip:text}
+  body.cyber .datestr{font-family:Orbitron,sans-serif;color:#00f0ff}
+  body.cyber .kw{border-radius:2px;background:rgba(255,0,200,.15);border-color:#ff00c8;color:#ff8bec}
+  body.cyber .brand h1{background:linear-gradient(90deg,#00f0ff,#ff00c8);-webkit-background-clip:text;background-clip:text;animation:glitch 4s infinite}
+  body.cyber .brand h1::after{content:" // 2099";-webkit-text-fill-color:#ff00c8;font-size:.45em;letter-spacing:2px;vertical-align:middle}
+  body.cyber .bday{background:linear-gradient(135deg,rgba(255,0,200,.35),rgba(122,0,255,.4))}
+  body.cyber #comboSel{border-radius:2px;background:rgba(0,240,255,.12);border-color:#00f0ff;box-shadow:0 0 14px rgba(0,240,255,.4)}
+  body.cyber #comboSel option{background:#0b0420}
+  body.cyber .task{border-radius:2px;background:rgba(0,240,255,.05);border-left-color:#00f0ff}
+  body.cyber .task.exam{border-left-color:#ff00c8;background:linear-gradient(90deg,rgba(255,0,200,.3),rgba(255,0,200,.05));border-color:rgba(255,0,200,.5)}
+  body.cyber .legend i{background:#ff00c8}
+  body.cyber .ev .time,body.cyber .tdate .d{font-family:Orbitron,monospace}
+  body.cyber .cinfo{border-radius:2px;background:rgba(0,240,255,.08);border-color:rgba(0,240,255,.5)}
+  body.cyber .panel{background:linear-gradient(160deg,#0d0326,#03010d);border-radius:4px;border-color:#00f0ff}
+  body.cyber .btn,body.cyber .daynav button,body.cyber .tbtns button{border-radius:2px}
+  body.cyber .tdisp{text-shadow:-2px 0 0 rgba(255,0,200,.8),2px 0 0 rgba(0,240,255,.8)}
+  body.cyber .tsel select option{background:#0b0420}
 </style>
 </head>
 <body>
-<div id="wx"></div><div id="fx"></div><div class="lights" id="lights"></div>
+<div id="wx"></div><canvas id="cyb"></canvas><div class="cyfloor"></div><div class="scan"></div><div id="fx"></div><div class="lights" id="lights"></div>
 <div class="blob b1"></div><div class="blob b2"></div><div class="gridbg"></div>
 
 <div class="app">
@@ -528,7 +574,7 @@
     </section>
   </main>
   <section class="timers hidden" id="timers"></section>
-  <footer><div class="modes"><button id="mGirl" title="Girlie Mode">💖</button><button id="mBoys" title="Boys Mode">😎</button><button id="mAut" title="Herbstmodus">🎃</button><button id="mXmas" title="Weihnachtsmodus">🎄</button></div><div class="xtip" id="xtip"></div></footer>
+  <footer><div class="modes"><button id="mGirl" title="Girlie Mode">💖</button><button id="mBoys" title="Boys Mode">😎</button><button id="mAut" title="Herbstmodus">🎃</button><button id="mCyber" title="Cyber-Modus">🤖</button><button id="mXmas" title="Weihnachtsmodus">🎄</button></div><div class="xtip" id="xtip"></div></footer>
 </div>
 
 <!-- Login / Admin -->
@@ -1038,6 +1084,26 @@ sSave.onclick=()=>{
 /* ============================================================
    Themen: Girlie Mode 💖 / Boys Mode 😎
    ============================================================ */
+// Datenregen für den Cyber-Modus (Canvas hinter den Kacheln)
+let cyT=null;
+function cyberRain(on){
+  clearInterval(cyT); cyT=null;
+  const c=cyb, x=c.getContext("2d");
+  if(!on){ x.clearRect(0,0,c.width,c.height); return; }
+  const fs=18, chars="01アイウエオカキクケコサシスセソ<>/{}=+*ΣΔΩ#";
+  c.width=innerWidth; c.height=innerHeight;
+  let cols=Math.ceil(c.width/fs), y=Array.from({length:cols},()=>Math.random()*-60);
+  cyT=setInterval(()=>{
+    if(c.width!==innerWidth){ c.width=innerWidth; c.height=innerHeight; cols=Math.ceil(c.width/fs); y=Array.from({length:cols},()=>Math.random()*-60); }
+    x.fillStyle="rgba(3,1,13,.12)"; x.fillRect(0,0,c.width,c.height);
+    x.font=fs+"px monospace";
+    for(let i=0;i<cols;i++){
+      x.fillStyle=Math.random()<.04?"#ff00c8":"#00f0ff";
+      x.fillText(chars[Math.random()*chars.length|0],i*fs,y[i]*fs);
+      if(y[i]*fs>c.height&&Math.random()>.975) y[i]=0; y[i]++;
+    }
+  },60);
+}
 const FX={girl:{items:["💖","✨","🌸","🦄","💕","🎀","🌷","💗"],n:18,zoom:false},
           boys:{items:["⚡","🔥","🚀","⚽","🏀","🎮","🏎️","💥"],n:14,zoom:true},
           autumn:{items:["🍂","🍁","🍂","🎃","🍁","🌰","🍂","🍄","🍁","🍂"],n:26,snow:true},
@@ -1048,14 +1114,14 @@ const xmasOpen=()=>{const n=new Date();return n>=XMAS_FROM&&n<XMAS_TO;};
 lights.innerHTML="<i></i>".repeat(40);
 function setMode(m){
   if(m==="xmas"&&!xmasOpen()) m="";
-  document.body.classList.remove("girl","boys","xmas","autumn");
+  document.body.classList.remove("girl","boys","xmas","autumn","cyber");
   if(m) document.body.classList.add(m);
   document.body.classList.toggle("light",!m);
-  mGirl.classList.toggle("on",m==="girl"); mBoys.classList.toggle("on",m==="boys"); mXmas.classList.toggle("on",m==="xmas"); mAut.classList.toggle("on",m==="autumn");
+  mGirl.classList.toggle("on",m==="girl"); mBoys.classList.toggle("on",m==="boys"); mXmas.classList.toggle("on",m==="xmas"); mAut.classList.toggle("on",m==="autumn"); mCyber.classList.toggle("on",m==="cyber"); cyberRain(m==="cyber");
   store.set("mode",m||"");
   fx.innerHTML=""; fx.className="";
   if(!m) return;
-  const f=FX[m]; if(f.zoom) fx.className="zoom"; if(f.snow) fx.className="snow";
+  const f=FX[m]; if(!f) return; if(f.zoom) fx.className="zoom"; if(f.snow) fx.className="snow";
   for(let i=0;i<f.n;i++){
     const e=document.createElement("span"); e.textContent=f.items[i%f.items.length];
     e.style.fontSize=(18+Math.random()*26)+"px";
@@ -1071,6 +1137,7 @@ function setMode(m){
 mGirl.onclick=()=>setMode(document.body.classList.contains("girl")?"":"girl");
 mBoys.onclick=()=>setMode(document.body.classList.contains("boys")?"":"boys");
 mAut.onclick=()=>setMode(document.body.classList.contains("autumn")?"":"autumn");
+mCyber.onclick=()=>setMode(document.body.classList.contains("cyber")?"":"cyber");
 let xtipT;
 function updXmasBtn(){
   mXmas.classList.toggle("locked",!xmasOpen());
