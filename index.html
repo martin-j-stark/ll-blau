@@ -351,14 +351,14 @@
   .digital .sec{display:inline-block;width:1.9em;text-align:left}
 
   /* ================= Helles Blau (Standard-Design) ================= */
-  body.light{--bg1:#eef5ff;--bg2:#dceaff;--card:rgba(255,255,255,.78);--card-b:rgba(30,90,200,.16);
+  body.light{--bg1:#eef5ff;--bg2:#dceaff;--card:rgba(255,255,255,.6);--card-b:rgba(30,90,200,.16);
     --ice:#0b2350;--sky:#2a62c9;--cyan:#0a7fd0;--blue:#1e6bff;--deep:#1546b8;--muted:#4f6a94;--warn:#e09a00;
     background:radial-gradient(1200px 800px at 85% -10%,#b9d6ff 0%,transparent 60%),
                radial-gradient(900px 700px at -10% 110%,#c4e6ff 0%,transparent 60%),
                linear-gradient(160deg,#f3f8ff,#dfeaff 55%,#eef5ff)}
   body.light .b1{background:#8fbcff;opacity:.3}body.light .b2{background:#8fe0ff;opacity:.3}
   body.light .gridbg{opacity:.35;background-image:linear-gradient(#bcd3f5 1px,transparent 1px),linear-gradient(90deg,#bcd3f5 1px,transparent 1px)}
-  body.light .card{box-shadow:0 14px 34px rgba(30,70,150,.13),inset 0 1px 0 #fff}
+  body.light .card{box-shadow:0 14px 34px rgba(30,70,150,.13),inset 0 1px 0 #fff;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
   body.light .brand h1{background:linear-gradient(90deg,#0b2a6b,#1e6bff 70%,#0a7fd0);-webkit-background-clip:text;background-clip:text}
   body.light .clock{background:linear-gradient(120deg,#ffffff,#e4efff)}
   body.light .digital .live{color:#0d3b8c;text-shadow:0 0 18px rgba(30,107,255,.25)}
@@ -418,16 +418,52 @@
   body.autumn .task.exam{border-left-color:#ff4d6d}
   body.autumn .panel{background:linear-gradient(160deg,#3d1c09,#1c0d05)}
   body.autumn .tsel select option{background:#3d1c09}
+
+  /* ================= Wetter (nur helles Standard-Design, hinter den Kacheln) ================= */
+  #wx{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;display:none}
+  body.light #wx{display:block}
+  .wxinfo{display:none;font-weight:600;color:var(--sky);margin-right:6px}
+  body.light .wxinfo{display:inline}
+  /* Hintergründe je nach Wetter */
+  body.light.wx-sun{background:radial-gradient(900px 700px at 92% -8%,#fff3c4 0%,transparent 55%),radial-gradient(900px 700px at -10% 110%,#c4e6ff 0%,transparent 60%),linear-gradient(160deg,#f6fbff,#d9ebff 55%,#eef6ff)}
+  body.light.wx-cloud,body.light.wx-snow{background:radial-gradient(1000px 700px at 85% -10%,#c3cfe0 0%,transparent 60%),linear-gradient(160deg,#d9e1ec,#bfcbdc 55%,#d0dae6)}
+  body.light.wx-rain,body.light.wx-storm{background:radial-gradient(1000px 700px at 85% -10%,#bccadd 0%,transparent 60%),linear-gradient(160deg,#d8e1ec,#b9c7d9 55%,#ccd7e4)}
+  body.light.wx-rain .b1,body.light.wx-storm .b1,body.light.wx-cloud .b1,body.light.wx-snow .b1{opacity:.12}
+  /* Sonne */
+  .wsun{position:absolute;top:-170px;right:-120px;width:560px;height:560px;border-radius:50%;
+    background:radial-gradient(circle,#fffbe6 0%,#ffe78a 22%,rgba(255,214,90,.45) 42%,transparent 70%);animation:sunpulse 6s ease-in-out infinite}
+  .wrays{position:absolute;top:-460px;right:-400px;width:1140px;height:1140px;border-radius:50%;
+    background:repeating-conic-gradient(rgba(255,210,90,.22) 0 5deg,transparent 5deg 15deg);
+    -webkit-mask-image:radial-gradient(circle,#000 18%,transparent 62%);mask-image:radial-gradient(circle,#000 18%,transparent 62%);animation:spin 90s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes sunpulse{50%{transform:scale(1.06)}}
+  /* Wolken */
+  .wcloud{position:absolute;left:0;height:calc(var(--w)*.34);width:var(--w);border-radius:999px;background:var(--cc,rgba(255,255,255,.95));
+    filter:blur(1.5px);animation:drift linear infinite;box-shadow:0 10px 30px rgba(50,80,130,.22)}
+  .wcloud::before,.wcloud::after{content:"";position:absolute;border-radius:50%;background:inherit}
+  .wcloud::before{width:46%;height:130%;left:14%;top:-62%}
+  .wcloud::after{width:34%;height:100%;left:50%;top:-42%}
+  @keyframes drift{from{transform:translateX(-35vw)}to{transform:translateX(135vw)}}
+  /* Regen */
+  .wdrop{position:absolute;top:-12vh;width:2px;height:var(--h,70px);border-radius:2px;
+    background:linear-gradient(rgba(25,70,160,0),rgba(25,70,160,.75));animation:rainfall linear infinite}
+  @keyframes rainfall{to{transform:translate(-90px,125vh)}}
+  .wflash{position:absolute;inset:0;background:#fff;opacity:0;animation:flash 9s infinite}
+  @keyframes flash{0%,91%,95%,100%{opacity:0}92%{opacity:.75}93%{opacity:.1}94%{opacity:.55}}
+  /* Schnee */
+  .wflake{position:absolute;top:-20px;width:var(--s);height:var(--s);border-radius:50%;background:#fff;
+    box-shadow:0 0 6px rgba(50,90,170,.8);animation:snow linear infinite}
 </style>
 </head>
 <body>
-<div id="fx"></div><div class="lights" id="lights"></div>
+<div id="wx"></div><div id="fx"></div><div class="lights" id="lights"></div>
 <div class="blob b1"></div><div class="blob b2"></div><div class="gridbg"></div>
 
 <div class="app">
   <header>
     <div class="brand"><h1>LL BLAU</h1></div>
     <div class="head-right">
+      <span id="wxInfo" class="wxinfo"></span>
       <span id="calStatus"><span class="status-dot"></span>Kalender wird geladen…</span>
       <button class="btn" id="loginBtn">🔒 Lehrperson</button>
     </div>
@@ -1122,6 +1158,54 @@ function drawT(i){
   if(st.run&&sec<=0&&!st.beeped){ st.beeped=true; store.set("t"+i,st); beep(); }
 }
 if(TIMER_PAGE) initTimers();
+
+/* ============================================================
+   Wetter Herisau (Open-Meteo, ohne Schlüssel) → Effekte im hellen Design
+   ============================================================ */
+const WX_URL="https://api.open-meteo.com/v1/forecast?latitude=47.386&longitude=9.279&current=temperature_2m,weather_code,is_day&timezone=Europe%2FZurich";
+const WX_LBL={sun:["☀️","Sonnig"],partly:["🌤️","Leicht bewölkt"],cloud:["☁️","Bewölkt"],rain:["🌧️","Regen"],snow:["🌨️","Schnee"],storm:["⛈️","Gewitter"],night:["🌙","Klar"]};
+let wxKindNow=null;
+function wxKind(c,day){
+  let k=c===0?"sun":c<=2?"partly":(c===3||c===45||c===48)?"cloud":((c>=51&&c<=67)||(c>=80&&c<=82))?"rain":((c>=71&&c<=77)||c===85||c===86)?"snow":c>=95?"storm":"cloud";
+  if(!day&&k==="sun") k="night"; if(!day&&k==="partly") k="cloud";
+  return k;
+}
+const rnd=(a,b)=>a+Math.random()*(b-a);
+function clouds(n,grey){
+  let h="";
+  for(let i=0;i<n;i++){
+    const w=rnd(220,460)|0, c=grey?`rgba(${rnd(225,245)|0},${rnd(230,245)|0},${rnd(238,250)|0},.95)`:"rgba(255,255,255,.95)";
+    h+=`<div class="wcloud" style="--w:${w}px;--cc:${c};top:${rnd(2,70)}vh;animation-duration:${rnd(80,160)}s;animation-delay:-${rnd(0,160)}s;opacity:${rnd(.55,.95).toFixed(2)}"></div>`;
+  }
+  return h;
+}
+function renderWx(kind){
+  if(kind===wxKindNow) return; wxKindNow=kind;
+  document.body.classList.remove("wx-sun","wx-cloud","wx-rain","wx-snow","wx-storm");
+  let h="";
+  if(kind==="sun"){ document.body.classList.add("wx-sun"); h='<div class="wrays"></div><div class="wsun"></div>'+clouds(1,false); }
+  else if(kind==="partly"){ document.body.classList.add("wx-sun"); h='<div class="wrays"></div><div class="wsun"></div>'+clouds(5,false); }
+  else if(kind==="cloud"){ document.body.classList.add("wx-cloud"); h=clouds(9,true); }
+  else if(kind==="rain"||kind==="storm"){
+    document.body.classList.add(kind==="rain"?"wx-rain":"wx-storm"); h=clouds(6,true);
+    for(let i=0;i<110;i++) h+=`<span class="wdrop" style="left:${rnd(-5,110)}%;--h:${rnd(50,95)|0}px;animation-duration:${rnd(.6,1.1).toFixed(2)}s;animation-delay:-${rnd(0,2).toFixed(2)}s;opacity:${rnd(.5,1).toFixed(2)}"></span>`;
+    if(kind==="storm") h+='<div class="wflash"></div>';
+  }
+  else if(kind==="snow"){
+    document.body.classList.add("wx-snow"); h=clouds(4,true);
+    for(let i=0;i<90;i++){const z=rnd(4,11);h+=`<span class="wflake" style="left:${rnd(0,100)}%;--s:${z.toFixed(1)}px;animation-duration:${rnd(9,20).toFixed(1)}s;animation-delay:-${rnd(0,20).toFixed(1)}s;opacity:${rnd(.6,1).toFixed(2)}"></span>`;}
+  }
+  wx.innerHTML=h;
+}
+async function loadWx(){
+  try{
+    const r=await fetch(WX_URL,{cache:"no-store"}); if(!r.ok) return;
+    const c=(await r.json()).current; const k=wxKind(c.weather_code,c.is_day===1);
+    renderWx(k);
+    wxInfo.textContent=`${WX_LBL[k][0]} ${Math.round(c.temperature_2m)}° Herisau`; wxInfo.title=WX_LBL[k][1];
+  }catch(e){}
+}
+loadWx(); setInterval(loadWx,15*60*1000);
 
 tick(); setInterval(tick,1000);
 renderInfo(); renderAll(); loadShared(); setInterval(loadShared,60*1000);
