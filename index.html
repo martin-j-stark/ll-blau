@@ -99,10 +99,10 @@
   /* ---------- Tasks ---------- */
   .tasks{grid-area:tasks}
   .picker{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
-  .selwrap{position:relative;max-width:340px}
+  .selwrap{position:relative;max-width:440px}
   .selwrap::after{content:"▾";position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--cyan);font-size:20px;pointer-events:none}
   #comboSel{width:100%;appearance:none;-webkit-appearance:none;padding:12px 46px 12px 18px;border-radius:14px;cursor:pointer;
-    font:700 20px Orbitron,Inter,sans-serif;letter-spacing:1px;color:#fff;outline:none;
+    font:700 18px Orbitron,Inter,sans-serif;letter-spacing:.5px;color:#fff;outline:none;
     background:linear-gradient(135deg,rgba(79,216,255,.25),rgba(47,123,255,.35));border:1px solid rgba(79,216,255,.5);
     box-shadow:0 6px 18px rgba(47,123,255,.3)}
   #comboSel:focus{border-color:var(--cyan)}
@@ -389,7 +389,7 @@
 
     <!-- Aufträge -->
     <section class="card tasks">
-      <h2>Aufträge der nächsten Wochen</h2>
+      <h2>Aufträge der nächsten Wochen – gefiltert nach Fach</h2>
       <div class="picker">
         <div class="selwrap"><select id="comboSel" aria-label="Fach und Niveau wählen"></select></div>
         <div class="sel-label" id="selLabel"></div>
@@ -703,7 +703,7 @@ function setStatus(ok,txt){ calStatus.innerHTML=`<span class="status-dot ${ok?"o
    Rendering
    ============================================================ */
 const esc=s=>(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let selCode=store.get("combo","DEg"); if(!COMBOS.includes(selCode)) selCode=COMBOS[0];
+let selCode="", selResetT=null;   // leer = «Hier die Klasse auswählen»; Auswahl springt nach 2 Min. zurück
 
 function renderAll(){ renderBirthdays(); renderToday(); renderTasks(); renderInfo(); }
 
@@ -765,8 +765,11 @@ function renderToday(){
   renderDay(tmrwList,nx,(isTomorrow?"Morgen":"Am "+WD[nx.getDay()])+" keine Einträge im Kalender.");
 }
 
-comboSel.innerHTML=COMBOS.map(c=>`<option value="${c}">${c}</option>`).join("");
-comboSel.onchange=()=>{selCode=comboSel.value; store.set("combo",selCode); renderTasks();};
+comboSel.innerHTML='<option value="">Hier die Klasse auswählen</option>'+COMBOS.map(c=>`<option value="${c}">${c}</option>`).join("");
+comboSel.onchange=()=>{
+  selCode=comboSel.value; renderTasks();
+  clearTimeout(selResetT); if(selCode) selResetT=setTimeout(()=>{selCode="";renderTasks();},2*60*1000);
+};
 function renderPicker(){
   comboSel.value=selCode;
   selLabel.innerHTML=`Aufträge der nächsten ${cfg().weeks} Wochen &nbsp;·&nbsp; <span class="legend"><i></i>Prüfung</span>`;
@@ -775,6 +778,7 @@ function renderPicker(){
 function renderTasks(){
   renderPicker();
   const code=selCode, now=new Date(), t0=dayStart(now), t1=addDays(t0,cfg().weeks*7);
+  if(!code){ taskList.innerHTML=`<div class="empty"><span class="big">👆</span>Wähle oben deine Klasse aus,<br>dann erscheinen hier die Aufträge.</div>`; return; }
   const list=expand(allEvents.filter(e=>!BDAY_RE.test(e.summary||"")&&codesOf((e.summary||"")+" "+(e.desc||"")).has(code)),t0,t1);
   if(!list.length){
     taskList.innerHTML=`<div class="empty"><span class="big">✅</span>${loadedOnce||allEvents.length?`Keine Aufträge für <b>${code}</b> in den nächsten ${cfg().weeks} Wochen.`:"Kalender wird geladen…"}</div>`;
