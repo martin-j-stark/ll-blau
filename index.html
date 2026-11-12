@@ -324,6 +324,15 @@
   body.tp .grid{gap:14px} body.tp .app{gap:14px}
   body.boys .tbtns button{border-radius:4px}
   @media (max-width:1000px){.timers{grid-template-columns:1fr}}
+
+  .dayhead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .dayhead h2{margin-bottom:14px}
+  .daynav{display:flex;gap:6px;margin-top:-6px}
+  .daynav button{width:34px;height:34px;border-radius:10px;border:1px solid var(--card-b);background:rgba(255,255,255,.08);
+    color:var(--ice);font:700 22px Inter,sans-serif;line-height:1;cursor:pointer;transition:.15s}
+  .daynav button:hover{background:rgba(255,255,255,.2)}
+  .daynav button:disabled{opacity:.25;cursor:default}
+  body.boys .daynav button{border-radius:4px}
 </style>
 </head>
 <body>
@@ -379,7 +388,8 @@
 
     <!-- Morgen (nächster Schultag) -->
     <section class="card tmrw">
-      <h2 id="tmrwTitle">Morgen</h2>
+      <div class="dayhead"><h2 id="tmrwTitle">Morgen</h2>
+        <div class="daynav"><button id="dPrev" title="Vorheriger Schultag">‹</button><button id="dNext" title="Nächster Schultag">›</button></div></div>
       <div class="list" id="tmrwList"></div>
     </section>
 
@@ -718,10 +728,17 @@ const FREE_DAYS=[
 ].map(([a,b])=>[new Date(a+"T00:00:00"),new Date(b+"T23:59:59")]);
 const isFree=d=>d.getDay()===0||d.getDay()===6||FREE_DAYS.some(([a,b])=>d>=a&&d<=b);
 function nextSchoolDay(d){ let n=addDays(dayStart(d),1); for(let i=0;i<60&&isFree(n);i++) n=addDays(n,1); return n; }
+function prevSchoolDay(d){ let n=addDays(dayStart(d),-1); for(let i=0;i<60&&isFree(n);i++) n=addDays(n,-1); return n; }
+let dayOffset=0, dayIdleT=null;      // 0 = nächster Schultag; Pfeile blättern weiter
+function shownDay(now){ let d=nextSchoolDay(now); for(let i=0;i<dayOffset;i++) d=nextSchoolDay(d); return d; }
+dPrev.onclick=()=>{ if(dayOffset>0){dayOffset--; dayMoved();} };
+dNext.onclick=()=>{ if(dayOffset<60){dayOffset++; dayMoved();} };
+function dayMoved(){ renderToday(); clearTimeout(dayIdleT); dayIdleT=setTimeout(()=>{dayOffset=0;renderToday();},2*60*1000); }
 function renderToday(){
   const now=new Date();
   renderDay(todayList,now,"Heute keine Einträge im Kalender.");
-  const nx=nextSchoolDay(now), isTomorrow=sameDay(nx,addDays(dayStart(now),1));
+  dPrev.disabled=dayOffset===0;
+  const nx=shownDay(now), isTomorrow=sameDay(nx,addDays(dayStart(now),1));
   const lbl=d=>`${WD[d.getDay()]}, ${d.getDate()}. ${MO[d.getMonth()]}`;
   todayTitle.textContent="Heute · "+lbl(now);
   tmrwTitle.textContent=(isTomorrow?"Morgen · ":"")+lbl(nx);
