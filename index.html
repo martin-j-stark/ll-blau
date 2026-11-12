@@ -373,7 +373,7 @@
 
     <!-- Heute -->
     <section class="card today">
-      <h2>Heute</h2>
+      <h2 id="todayTitle">Heute</h2>
       <div class="list" id="todayList"></div>
     </section>
 
@@ -722,8 +722,9 @@ function renderToday(){
   const now=new Date();
   renderDay(todayList,now,"Heute keine Einträge im Kalender.");
   const nx=nextSchoolDay(now), isTomorrow=sameDay(nx,addDays(dayStart(now),1));
-  const far=(dayStart(nx)-dayStart(now))/864e5>3;
-  tmrwTitle.textContent=isTomorrow?"Morgen":WD[nx.getDay()]+(far?` · ${nx.getDate()}. ${MO[nx.getMonth()]}`:"");
+  const lbl=d=>`${WD[d.getDay()]}, ${d.getDate()}. ${MO[d.getMonth()]}`;
+  todayTitle.textContent="Heute · "+lbl(now);
+  tmrwTitle.textContent=(isTomorrow?"Morgen · ":"")+lbl(nx);
   renderDay(tmrwList,nx,(isTomorrow?"Morgen":"Am "+WD[nx.getDay()])+" keine Einträge im Kalender.");
 }
 
