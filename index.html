@@ -333,6 +333,19 @@
   .daynav button:hover{background:rgba(255,255,255,.2)}
   .daynav button:disabled{opacity:.25;cursor:default}
   body.boys .daynav button{border-radius:4px}
+
+  /* ---------- Mitteilung in der Uhr-Kachel ---------- */
+  .cinfo{flex:1;min-width:0;align-self:stretch;display:flex;align-items:center;gap:18px;padding:12px 22px;margin:-6px 0;
+    border-radius:18px;background:rgba(255,255,255,.08);border:1px solid var(--card-b);overflow:hidden}
+  .cinfo img{max-height:150px;max-width:38%;border-radius:12px;object-fit:contain;flex-shrink:0}
+  .ctext{min-width:0}
+  .ctitle{font:800 clamp(20px,1.9vw,32px) Inter,sans-serif;line-height:1.15;margin-bottom:4px}
+  .cbody{font-size:clamp(15px,1.25vw,21px);line-height:1.35;color:var(--ice);opacity:.9;white-space:pre-line;
+    display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+  body.has-cinfo .digital .ghost,body.has-cinfo .digital .live{font-size:clamp(60px,6.6vw,124px)}
+  body.has-cinfo .clock{gap:22px}
+  body.has-cinfo .weekday{font-size:clamp(26px,2.8vw,46px)}
+  body.boys .cinfo{border-radius:4px} body.girl .cinfo{border-radius:26px}
 </style>
 </head>
 <body>
@@ -354,6 +367,10 @@
       <div class="digital">
         <div class="ghost">88:88</div>
         <div class="live"><span id="hh">--</span><span class="colon">:</span><span id="mm">--</span><span class="sec" id="ss">--</span></div>
+      </div>
+      <div class="cinfo hidden" id="cinfo">
+        <img id="cImg" class="hidden" alt="">
+        <div class="ctext"><div class="ctitle" id="cTitle"></div><div class="cbody" id="cBody"></div></div>
       </div>
       <div class="datebox">
         <div class="weekday" id="weekday">–</div>
@@ -452,6 +469,9 @@
         <input type="number" id="sWeeks" min="1" max="12">
         <label>Neues Passwort (leer = unverändert)</label>
         <input type="password" id="sPw" autocomplete="new-password">
+        <label>GitHub-Schlüssel (für Mitteilungen auf allen Geräten)</label>
+        <input type="password" id="sTok" autocomplete="off" placeholder="github_pat_…">
+        <div class="hint">Wird nur auf diesem Gerät gespeichert. Leer lassen = unverändert. «-» eingeben = entfernen.</div>
         <div class="msg" id="sMsg"></div>
         <div class="row"><button class="btn primary" id="sSave">Speichern</button></div>
       </div>
@@ -794,17 +814,25 @@ function calInfo(){
   if(img) text=text.replace(img,"").trim();
   return {title:e.summary.replace(INFO_RE,""),text,img,t:Date.now(),fromCal:true};
 }
+let sharedInfo=null;   // Mitteilung aus mitteilung.json (für alle Geräte)
+async function loadShared(){
+  try{ const r=await fetch("mitteilung.json?t="+Date.now(),{cache:"no-store"}); if(r.ok){ sharedInfo=await r.json(); renderInfo(); } }catch(e){}
+}
+function infoValid(i){
+  if(!i||!(i.text||i.title||i.img)) return false;
+  if(i.until){const u=parseCH(i.until); if(u&&new Date()>u) return false;}
+  return true;
+}
 function renderInfo(){
-  const info=calInfo()||store.get("info",null);
-  let show=info&&(info.text||info.title||info.img);
-  if(show&&info.until){const u=parseCH(info.until); if(u&&new Date()>u) show=false;}
-  infoCard.classList.toggle("hidden",!show); grid.classList.toggle("no-info",!show);
+  infoCard.classList.add("hidden"); grid.classList.add("no-info");
+  const local=store.get("info",null);
+  const info=[sharedInfo,calInfo(),local].find(infoValid);
+  const show=!!info;
+  cinfo.classList.toggle("hidden",!show); document.body.classList.toggle("has-cinfo",show);
   if(!show) return;
-  infoTitle.textContent=info.title||""; infoTitle.classList.toggle("hidden",!info.title);
-  infoText.textContent=info.text||""; infoText.classList.toggle("hidden",!info.text);
-  infoImgWrap.classList.toggle("hidden",!info.img); if(info.img) infoImg.src=info.img;
-  if(info.fromCal){ infoMeta.textContent="Aus dem Kalender"; return; }
-  const d=new Date(info.t); infoMeta.textContent=`Aktualisiert ${d.getDate()}.${d.getMonth()+1}. ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  cTitle.textContent=info.title||""; cTitle.classList.toggle("hidden",!info.title);
+  cBody.textContent=info.text||""; cBody.classList.toggle("hidden",!info.text);
+  cImg.classList.toggle("hidden",!info.img); if(info.img) cImg.src=info.img; else cImg.removeAttribute("src");
 }
 
 /* ============================================================
@@ -819,7 +847,7 @@ pw.addEventListener("keydown",e=>{if(e.key==="Enter")doLogin.click();});
 doLogin.onclick=()=>{
   if(hash(pw.value)!==cfg().pwHash){loginMsg.className="msg err";loginMsg.textContent="Falsches Passwort.";return;}
   loginView.classList.add("hidden"); adminView.classList.remove("hidden");
-  const info=store.get("info",{}); aTitle.value=info.title||""; aText.value=info.text||""; aUntil.value=info.until||"";
+  const info=(sharedInfo&&sharedInfo.t?sharedInfo:store.get("info",{}))||{}; aTitle.value=info.title||""; aText.value=info.text||""; aUntil.value=info.until||"";
   pendingImg=undefined; aImg.value=""; aPrev.style.display=info.img?"block":"none"; if(info.img) aPrev.src=info.img;
   const c=cfg(); sUrl.value=c.calUrl; sProxy.value=c.proxy; sWeeks.value=c.weeks; sPw.value=""; aMsg.textContent=sMsg.textContent="";
 };
@@ -832,27 +860,61 @@ aImg.onchange=()=>{
   const img=new Image(); const rd=new FileReader();
   rd.onload=()=>{img.src=rd.result;};
   img.onload=()=>{ // verkleinern, damit es in den Browserspeicher passt
-    const max=1600, k=Math.min(1,max/Math.max(img.width,img.height));
+    const max=1200, k=Math.min(1,max/Math.max(img.width,img.height));
     const cv=document.createElement("canvas"); cv.width=img.width*k; cv.height=img.height*k;
     cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
-    pendingImg=cv.toDataURL("image/jpeg",.85); aPrev.src=pendingImg; aPrev.style.display="block";
+    pendingImg=cv.toDataURL("image/jpeg",.8); aPrev.src=pendingImg; aPrev.style.display="block";
   };
   rd.readAsDataURL(f);
 };
 aImgDel.onclick=()=>{pendingImg=null;aImg.value="";aPrev.style.display="none";};
-aSave.onclick=()=>{
-  const old=store.get("info",{});
+const GH_REPO="martin-j-stark/ll-blau", GH_FILE="mitteilung.json";
+async function pushShared(info){
+  const tok=store.get("ghtoken","");
+  if(!tok) throw new Error("notoken");
+  const api=`https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`;
+  const h={Authorization:"Bearer "+tok,Accept:"application/vnd.github+json"};
+  let sha; const g=await fetch(api+"?ref=main",{headers:h,cache:"no-store"});
+  if(g.status===401||g.status===403) throw new Error("auth");
+  if(g.ok) sha=(await g.json()).sha;
+  const body=JSON.stringify(info||{});
+  const content=btoa(unescape(encodeURIComponent(body)));
+  const r=await fetch(api,{method:"PUT",headers:h,body:JSON.stringify({message:"Mitteilung aktualisiert",content,sha,branch:"main"})});
+  if(r.status===401||r.status===403) throw new Error("auth");
+  if(!r.ok) throw new Error("http "+r.status);
+}
+function ghErr(e){
+  return e.message==="notoken"?"Kein GitHub-Schlüssel auf diesem Gerät – unter «Einstellungen» eintragen. (Nur lokal gespeichert.)"
+       : e.message==="auth"?"GitHub-Schlüssel ungültig oder ohne Schreibrecht."
+       : "Speichern bei GitHub fehlgeschlagen ("+e.message+").";
+}
+aSave.onclick=async()=>{
+  const old=sharedInfo&&sharedInfo.t?sharedInfo:store.get("info",{})||{};
   if(aUntil.value.trim()&&!parseCH(aUntil.value)){aMsg.className="msg err";aMsg.textContent="Datum bitte als TT.MM.JJJJ eingeben.";return;}
   const info={title:aTitle.value.trim(),text:aText.value.trim(),until:aUntil.value.trim(),img:pendingImg===undefined?old.img:pendingImg,t:Date.now()};
-  if(!store.set("info",info)){aMsg.className="msg err";aMsg.textContent="Bild zu gross – bitte ein kleineres wählen.";return;}
-  aMsg.className="msg ok";aMsg.textContent="✓ Veröffentlicht."; renderInfo();
+  aMsg.className="msg";aMsg.textContent="Wird veröffentlicht…";
+  try{
+    await pushShared(info); sharedInfo=info; store.set("info",null);
+    aMsg.className="msg ok";aMsg.textContent="✓ Veröffentlicht – erscheint in ca. 1–2 Minuten auf allen Bildschirmen.";
+  }catch(e){
+    store.set("info",info); aMsg.className="msg err"; aMsg.textContent=ghErr(e);
+  }
+  renderInfo();
 };
-aDel.onclick=()=>{store.set("info",null);aTitle.value=aText.value=aUntil.value="";aPrev.style.display="none";pendingImg=undefined;aMsg.className="msg ok";aMsg.textContent="✓ Gelöscht.";renderInfo();};
+aDel.onclick=async()=>{
+  aTitle.value=aText.value=aUntil.value="";aPrev.style.display="none";pendingImg=null;store.set("info",null);
+  aMsg.className="msg";aMsg.textContent="Wird gelöscht…";
+  try{ await pushShared({}); sharedInfo={}; aMsg.className="msg ok";aMsg.textContent="✓ Gelöscht – verschwindet in ca. 1–2 Minuten überall."; }
+  catch(e){ aMsg.className="msg err";aMsg.textContent=ghErr(e); }
+  renderInfo();
+};
 sSave.onclick=()=>{
   const c=store.get("cfg",{});
   c.calUrl=sUrl.value.trim()||DEFAULTS.calUrl; c.proxy=sProxy.value.trim(); c.weeks=Math.max(1,Math.min(12,+sWeeks.value||4));
   if(sPw.value){ if(sPw.value.length<4){sMsg.className="msg err";sMsg.textContent="Passwort: mindestens 4 Zeichen.";return;} c.pwHash=hash(sPw.value); }
-  store.set("cfg",c); sMsg.className="msg ok"; sMsg.textContent="✓ Gespeichert."; sPw.value="";
+  if(sTok.value.trim()==="-") store.set("ghtoken","");
+  else if(sTok.value.trim()) store.set("ghtoken",sTok.value.trim());
+  store.set("cfg",c); sMsg.className="msg ok"; sMsg.textContent="✓ Gespeichert."+(store.get("ghtoken","")?" GitHub-Schlüssel ist eingetragen.":""); sPw.value=""; sTok.value="";
   loadCalendar(); renderTasks();
 };
 
@@ -982,7 +1044,7 @@ function drawT(i){
 if(TIMER_PAGE) initTimers();
 
 tick(); setInterval(tick,1000);
-renderInfo(); renderAll();
+renderInfo(); renderAll(); loadShared(); setInterval(loadShared,60*1000);
 loadCalendar(); setInterval(loadCalendar,REFRESH_MIN*60*1000);
 setInterval(renderInfo,60*1000);
 </script>
