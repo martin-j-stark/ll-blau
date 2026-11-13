@@ -843,7 +843,12 @@ async function loadCalendar(){
       const t=await fetchText(u);
       allEvents=parseICS(t); loadedOnce=true;
       store.set("cache",{t:Date.now(),ics:t});
-      setStatus(true,"Kalender aktuell · "+pad(new Date().getHours())+":"+pad(new Date().getMinutes()));
+      let stand=null;
+      if(u.startsWith("calendar.ics")){ try{ const r=await fetch("kalender-stand.txt?t="+Date.now(),{cache:"no-store"}); if(r.ok){ const d=new Date((await r.text()).trim()); if(!isNaN(d)) stand=d; } }catch(e){} }
+      if(stand){
+        const old=(Date.now()-stand)/36e5>6;   // älter als 6 Std. → Outlook war länger nicht erreichbar
+        setStatus(!old,(old?"Kalender · Stand ":"Kalender aktuell · ")+(sameDay(stand,new Date())?"":`${stand.getDate()}.${stand.getMonth()+1}. `)+pad(stand.getHours())+":"+pad(stand.getMinutes()));
+      } else setStatus(true,"Kalender aktuell · "+pad(new Date().getHours())+":"+pad(new Date().getMinutes()));
       renderAll(); return;
     }catch(e){}
   }
