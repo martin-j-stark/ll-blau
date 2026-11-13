@@ -28,38 +28,61 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Letzten Kalender-Stand laden
+        uses: actions/cache/restore@v4
+        with:
+          path: .cal-cache
+          key: kalender-${{ github.run_id }}
+          restore-keys: kalender-
+
       - name: Kalender abrufen
         env:
           ID: cad5169b7d66437a98a4138f0e1fd5b6@schule-herisau.ar.ch/e7e66a07ec2f4ed097fa8cdecf20bc5c15907840639511666056
-          SITE: https://martin-j-stark.github.io/ll-blau
         run: |
-          mkdir -p _site
+          mkdir -p _site .cal-cache
           cp index.html _site/
           cp index.html _site/timer.html
           cp mitteilung.json _site/ 2>/dev/null || echo "{}" > _site/mitteilung.json
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
-          for attempt in 1 2 3; do
-            for url in \
-              "https://outlook.office365.com/owa/calendar/$ID/calendar.ics" \
-              "https://outlook.office365.com/calendar/published/$ID/calendar.ics" \
-              "https://outlook.office.com/owa/calendar/$ID/calendar.ics" \
-              "https://outlook.live.com/owa/calendar/$ID/calendar.ics"; do
-              for ip in -4 -6; do
-                echo "Versuch $attempt ($ip): $url"
-                if curl $ip -fsSL --http1.1 --connect-timeout 15 -m 60 -A "$UA" "$url" -o /tmp/cal.ics 2>&1 && grep -q "BEGIN:VCALENDAR" /tmp/cal.ics; then
-                  mv /tmp/cal.ics _site/calendar.ics
-                  date -u +%Y-%m-%dT%H:%M:%SZ > _site/kalender-stand.txt
-                  echo "OK: $(grep -c BEGIN:VEVENT _site/calendar.ics) Termine"
-                  exit 0
-                fi
-              done
-            done
-            sleep 20
+          ICS="https://outlook.office365.com/owa/calendar/$ID/calendar.ics"
+          ENC=$(python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1],safe=''))" "$ICS")
+          ok() { grep -q "BEGIN:VCALENDAR" /tmp/cal.ics 2>/dev/null; }
+          save() {
+            mv /tmp/cal.ics _site/calendar.ics
+            date -u +%Y-%m-%dT%H:%M:%SZ > _site/kalender-stand.txt
+            cp _site/calendar.ics _site/kalender-stand.txt .cal-cache/
+            echo "OK über $1: $(grep -c BEGIN:VEVENT _site/calendar.ics) Termine"
+            echo "FRESH=1" >> $GITHUB_ENV
+          }
+          # 1) direkt bei Outlook
+          for url in "$ICS" "https://outlook.office365.com/calendar/published/$ID/calendar.ics" "https://outlook.office.com/owa/calendar/$ID/calendar.ics"; do
+            echo "Direkt: $url"
+            curl -4 -fsSL --http1.1 --connect-timeout 12 -m 45 -A "$UA" "$url" -o /tmp/cal.ics && ok && { save direkt; exit 0; }
           done
-          echo "::warning::Outlook nicht erreichbar – letzter Stand wird weiterverwendet"
-          curl -fsSL -m 60 "$SITE/calendar.ics?t=$(date +%s)" -o _site/calendar.ics && grep -q "BEGIN:VCALENDAR" _site/calendar.ics || rm -f _site/calendar.ics
-          curl -fsSL -m 30 "$SITE/kalender-stand.txt?t=$(date +%s)" -o _site/kalender-stand.txt || echo "unbekannt" > _site/kalender-stand.txt
-          ls -la _site
+          # 2) über Zwischendienste (andere Server, die Outlook nicht sperrt)
+          for p in \
+            "https://api.allorigins.win/raw?url=$ENC" \
+            "https://corsproxy.io/?url=$ENC" \
+            "https://api.codetabs.com/v1/proxy?quest=$ICS" \
+            "https://thingproxy.freeboard.io/fetch/$ICS"; do
+            echo "Proxy: ${p%%\?*}"
+            curl -fsSL --connect-timeout 15 -m 60 -A "$UA" "$p" -o /tmp/cal.ics && ok && { save proxy; exit 0; }
+          done
+          # 3) letzter gespeicherter Stand
+          echo "::warning::Outlook nicht erreichbar – letzter gespeicherter Stand wird verwendet"
+          if [ -f .cal-cache/calendar.ics ]; then
+            cp .cal-cache/calendar.ics _site/; cp .cal-cache/kalender-stand.txt _site/ 2>/dev/null || true
+            echo "Stand: $(cat _site/kalender-stand.txt 2>/dev/null)"
+          else
+            echo "Kein gespeicherter Stand vorhanden."
+          fi
+
+      - name: Kalender-Stand sichern
+        if: env.FRESH == '1'
+        uses: actions/cache/save@v4
+        with:
+          path: .cal-cache
+          key: kalender-${{ github.run_id }}
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
