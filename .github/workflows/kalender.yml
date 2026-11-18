@@ -1,19 +1,20 @@
-# Holt alle 15 Minuten den Outlook-Kalender und veröffentlicht ihn zusammen mit der Seite.
-# So braucht die Seite keinen fremden Proxy-Dienst.
+# Holt den Outlook-Kalender und veröffentlicht ihn zusammen mit der Seite.
+# Nach jedem Durchlauf wartet der Job "weiter" und startet den nächsten Durchlauf selbst
+# (Mo–Fr 6–19 Uhr alle 15 Min., sonst stündlich). Der Zeitplan unten ist nur Reserve.
 name: Kalender aktualisieren
 
 on:
   push:
     branches: [main]
   schedule:
-    - cron: "*/15 5-18 * * 1-5"   # Mo–Fr, ca. 6–20 Uhr Schweizer Zeit
-    - cron: "0 */3 * * *"         # sonst alle 3 Stunden
+    - cron: "7 */2 * * *"         # Reserve: startet die Kette neu, falls sie abreisst
   workflow_dispatch:
 
 permissions:
   contents: read
   pages: write
   id-token: write
+  actions: write
 
 concurrency:
   group: pages
@@ -90,3 +91,18 @@ jobs:
           path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  weiter:
+    needs: deploy
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Warten und nächsten Abruf starten
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          H=$(TZ=Europe/Zurich date +%H); D=$(TZ=Europe/Zurich date +%u)
+          if [ "$D" -le 5 ] && [ "$H" -ge 6 ] && [ "$H" -lt 19 ]; then M=15; else M=60; fi
+          echo "Nächster Abruf in $M Minuten"
+          sleep $((M*60))
+          gh workflow run kalender.yml --ref main -R "${{ github.repository }}"
