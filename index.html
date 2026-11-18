@@ -499,6 +499,22 @@
   body.cyber .btn,body.cyber .daynav button,body.cyber .tbtns button{border-radius:2px}
   body.cyber .tdisp{text-shadow:-2px 0 0 rgba(255,0,200,.8),2px 0 0 rgba(0,240,255,.8)}
   body.cyber .tsel select option{background:#0b0420}
+
+  /* Geburtstags-Kachel: immer sichtbar */
+  .bday{justify-content:flex-start!important;padding-top:18px;padding-bottom:16px}
+  .bday h2{margin-bottom:6px}
+  .brow{display:flex;align-items:center;gap:12px}
+  .brow .cake{font-size:40px}
+  .brow .wish{margin:0}
+  .bday .names{font-size:clamp(22px,2.1vw,36px);margin-top:4px}
+  .bday .names.many{font-size:clamp(18px,1.6vw,26px)}
+  .bday.quiet{background:var(--card)}
+  .bday.quiet .cake{animation:none;opacity:.85}
+  .bday.quiet .wish{font-size:18px;font-weight:600;opacity:.9}
+  .bday.quiet .confetti{display:none}
+  .bnext{font-size:15px;color:var(--muted);margin-top:8px}
+  .bnext b{color:var(--ice)}
+  body.light .bday.quiet{background:var(--card)}
 </style>
 </head>
 <body>
@@ -534,11 +550,12 @@
     </section>
 
     <!-- Geburtstag -->
-    <section class="card bday hidden" id="bdayCard">
+    <section class="card bday" id="bdayCard">
       <div class="confetti" id="confetti"></div>
-      <div><span class="cake">🎂</span></div>
-      <div class="wish">Herzlichen Glückwunsch zum Geburtstag!</div>
+      <h2>Geburtstage</h2>
+      <div class="brow"><span class="cake" id="bdayIcon">🎂</span><div class="wish" id="bdayWish">Herzlichen Glückwunsch zum Geburtstag!</div></div>
       <div class="names" id="bdayNames"></div>
+      <div class="bnext" id="bdayNext"></div>
     </section>
 
     <!-- Aufträge -->
@@ -867,20 +884,36 @@ let selCode="", selResetT=null;   // leer = «Hier die Klasse auswählen»; Ausw
 
 function renderAll(){ renderBirthdays(); renderToday(); renderTasks(); renderInfo(); }
 
-function renderBirthdays(){
-  const t0=dayStart(new Date()), t1=addDays(t0,1);
+function bdayNamesOn(day){
+  const t0=dayStart(day), t1=addDays(t0,1);
   const list=expand(allEvents.filter(e=>BDAY_RE.test(e.summary||"")),t0,t1).filter(e=>sameDay(e.start,t0)||e.allDay);
-  const names=[...new Set(list.map(e=>bdayName(e.summary)).filter(Boolean))];
-  const has=names.length>0;
-  bdayCard.classList.toggle("hidden",!has);
-  grid.classList.toggle("no-bday",!has);
+  return [...new Set(list.map(e=>bdayName(e.summary)).filter(Boolean))];
+}
+function renderBirthdays(){
+  const now=new Date();
+  const names=bdayNamesOn(now), has=names.length>0;
+  bdayCard.classList.remove("hidden"); grid.classList.remove("no-bday");   // Kachel immer sichtbar
+  bdayCard.classList.toggle("quiet",!has);
   if(has){
-    bdayNames.innerHTML=names.map(esc).join("<br>");
+    bdayIcon.textContent="🎂";
+    bdayWish.textContent="Herzlichen Glückwunsch zum Geburtstag!";
+    bdayNames.innerHTML=names.map(esc).join(names.length>2?", ":"<br>"); bdayNames.classList.remove("hidden"); bdayNames.classList.toggle("many",names.length>1);
     if(!confetti.childElementCount){
       const cols=["#4fd8ff","#8cc8ff","#ffffff","#2f7bff","#ffd36b"];
       for(let i=0;i<26;i++){const c=document.createElement("i");c.style.left=Math.random()*100+"%";c.style.background=cols[i%cols.length];c.style.animationDuration=(4+Math.random()*5)+"s";c.style.animationDelay=(-Math.random()*8)+"s";confetti.appendChild(c);}
     }
+  } else {
+    bdayIcon.textContent="🎈";
+    bdayWish.textContent=(loadedOnce||allEvents.length)?"Heute hat niemand Geburtstag.":"Kalender wird geladen…";
+    bdayNames.innerHTML=""; bdayNames.classList.add("hidden");
   }
+  // nächster Geburtstag (innerhalb von 60 Tagen)
+  let nextTxt="";
+  for(let i=1;i<=60;i++){
+    const d=addDays(dayStart(now),i), n=bdayNamesOn(d);
+    if(n.length){ const when=i===1?"morgen":`${WD[d.getDay()]}, ${d.getDate()}. ${MO[d.getMonth()]}`; nextTxt=`Nächster Geburtstag: <b>${n.map(esc).join(", ")}</b> · ${when}`; break; }
+  }
+  bdayNext.innerHTML=nextTxt;
 }
 
 function renderDay(el,day,emptyTxt){
