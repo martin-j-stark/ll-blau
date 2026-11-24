@@ -43,6 +43,7 @@ jobs:
           mkdir -p _site .cal-cache
           cp index.html _site/
           cp index.html _site/timer.html
+          cp belegung.html _site/
           cp mitteilung.json _site/ 2>/dev/null || echo "{}" > _site/mitteilung.json
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
           ICS="https://outlook.office365.com/owa/calendar/$ID/calendar.ics"

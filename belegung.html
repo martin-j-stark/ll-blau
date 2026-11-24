@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LL Blau · Belegung</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#0b2350;--blue:#1e6bff;--sky:#2a62c9;--muted:#4f6a94;--card:rgba(255,255,255,.8);--line:rgba(30,90,200,.16);
+        --k:#14a05a;--kbg:#dcf7e7;--m:#2a62c9;--mbg:#e3ecff}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:Inter,system-ui,Arial,sans-serif;color:var(--ink);
+    background:radial-gradient(1100px 700px at 85% -10%,#b9d6ff 0%,transparent 60%),radial-gradient(900px 700px at -10% 110%,#c4e6ff 0%,transparent 60%),linear-gradient(160deg,#f3f8ff,#dfeaff 55%,#eef5ff);
+    display:flex;flex-direction:column;padding:20px 26px;gap:16px;min-height:100vh}
+  header{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+  h1{font:900 30px Orbitron,sans-serif;letter-spacing:3px;background:linear-gradient(90deg,#0b2a6b,#1e6bff 70%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  h1 small{font:700 16px Inter,sans-serif;letter-spacing:1px;color:var(--sky);-webkit-text-fill-color:var(--sky);margin-left:10px}
+  .clock{font:700 34px Orbitron,monospace;color:#0d3b8c}
+  .clock span{font-size:.55em;color:var(--blue);margin-left:4px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:0 12px 30px rgba(30,70,150,.12);padding:16px 20px}
+  .pick{display:flex;flex-direction:column;gap:10px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .row .lbl{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--sky);width:72px}
+  .chip{padding:9px 14px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink);font:700 15px Inter,sans-serif;cursor:pointer;transition:.15s}
+  .chip:hover{background:#eef4ff}
+  .chip.on{background:linear-gradient(135deg,#1e6bff,#1546b8);color:#fff;border-color:transparent;box-shadow:0 6px 14px rgba(30,107,255,.3)}
+  .chip.now::after{content:" ●";color:#14a05a}
+  .chip.on.now::after{color:#7dffb0}
+  .chip.jetzt{border-style:dashed}
+  .info{font-size:14px;color:var(--muted)}
+  .info b{color:var(--ink)}
+  .cols{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:16px;min-height:0}
+  .col h2{display:flex;align-items:center;justify-content:space-between;font-size:20px;font-weight:800;margin-bottom:12px}
+  .col h2 .n{font:700 22px Orbitron,sans-serif;padding:4px 14px;border-radius:999px}
+  .col.k h2{color:var(--k)} .col.k h2 .n{background:var(--kbg)}
+  .col.m h2{color:var(--m)} .col.m h2 .n{background:var(--mbg)}
+  .col .sub{font-size:13px;color:var(--muted);margin:-6px 0 12px}
+  .names{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  .nm{padding:10px 12px;border-radius:12px;font-weight:700;font-size:18px;line-height:1.2}
+  .k .nm{background:var(--kbg);border:1px solid rgba(20,160,90,.25)}
+  .m .nm{background:var(--mbg);border:1px solid rgba(42,98,201,.2)}
+  .nm small{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-top:2px}
+  .empty{color:var(--muted);font-size:16px;padding:20px 0}
+  .hint{font-size:12px;color:var(--muted);text-align:center}
+  @media (max-width:800px){.cols{grid-template-columns:1fr}.row .lbl{width:100%}}
+</style>
+</head>
+<body>
+<header>
+  <h1>LL BLAU<small>Belegung &amp; Kompensation</small></h1>
+  <div class="clock" id="clk">--:--</div>
+</header>
+
+<section class="card pick">
+  <div class="row"><div class="lbl">Tag</div><div class="row" id="days"></div></div>
+  <div class="row"><div class="lbl">Lektion</div><div class="row" id="les"></div></div>
+  <div class="info" id="info"></div>
+</section>
+
+<main class="cols">
+  <section class="card col k">
+    <h2>🟢 Darf kompensieren <span class="n" id="nk">0</span></h2>
+    <div class="sub">K-Lektion – sofern keine Einträge auf der gelben Liste offen sind.</div>
+    <div class="names" id="lk"></div>
+  </section>
+  <section class="card col m">
+    <h2>🔵 Bleibt in der LL <span class="n" id="nm">0</span></h2>
+    <div class="sub">M-Lektion – bleibt in jedem Fall in der Lernlandschaft.</div>
+    <div class="names" id="lm"></div>
+  </section>
+</main>
+<div class="hint">Die gelbe Liste wird hier aus Datenschutzgründen nicht angezeigt. Ob jemand offene Einträge hat, zeigt die Ampel in der Excel-Mappe.</div>
+
+<script>
+const DAYS=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"];
+const LES=["7:35–8:20","8:20–9:05","9:05–9:50","10:10–10:55","10:55–11:40","13:40–14:25","14:25–15:10","15:30–16:15"];
+// [Tag, Lektion, Vorname, K=1/M=0, Bemerkung] – Quelle: LL_Blau_Belegung & Kompensation_V1.xlsx (Stand 24.11.2026)
+const DATA=[[0,0,"Lazar",0,""],[0,0,"Cihan",1,""],[0,0,"Thomas",0,""],[0,0,"Samuel",0,""],[0,0,"Giuliano",0,""],[0,0,"Ariola",1,""],[0,0,"Bahoz",0,""],[0,0,"Sara",1,""],[0,0,"Selma",1,""],[0,0,"Angelos",0,""],[0,0,"Leonie",1,""],[0,0,"Mariana",0,""],[0,0,"Guilherme",0,""],[0,0,"Natalija",0,""],[0,0,"David",1,""],[0,0,"Anthony",1,""],[0,0,"Aneesh",1,""],[0,0,"Amelie",1,""],[0,0,"Lea",0,""],[0,0,"Andjela",1,""],[0,0,"Illia",0,""],[0,0,"Hera",0,""],[0,1,"Lazar",0,""],[0,1,"Cihan",1,""],[0,1,"Thomas",0,""],[0,1,"Samuel",0,""],[0,1,"Giuliano",0,""],[0,1,"Ariola",1,""],[0,1,"Bahoz",0,""],[0,1,"Sara",0,""],[0,1,"Angelos",0,""],[0,1,"Leonie",0,""],[0,1,"Mariana",0,""],[0,1,"Guilherme",0,""],[0,1,"Natalija",0,""],[0,1,"David",1,""],[0,1,"Anthony",0,""],[0,1,"Aneesh",0,""],[0,1,"Amelie",0,""],[0,1,"Lea",0,""],[0,1,"Andjela",0,""],[0,1,"Illia",0,""],[0,2,"Julia B.",0,""],[0,2,"Lina",0,""],[0,2,"Adriana",0,""],[0,2,"Njegoš",0,""],[0,2,"Danija",0,""],[0,2,"Giuliana",0,""],[0,2,"Raiyah",0,""],[0,2,"Ariola",1,""],[0,3,"Lira",0,""],[0,3,"Mara",0,""],[0,3,"Nathan",0,""],[0,3,"Nico",0,""],[0,3,"Timur",0,""],[0,3,"Marwin",0,""],[0,3,"Njegoš",0,""],[0,3,"David",0,""],[0,3,"Aneesh",0,""],[0,3,"Jano",0,""],[0,3,"Giuliana",0,""],[0,3,"Illia",0,""],[0,3,"Emilia",0,""],[0,3,"Yves",0,""],[0,3,"Maja",0,""],[0,4,"Thomas",1,""],[0,4,"Soraya",0,""],[0,4,"Emilia",0,""],[0,4,"Samuel",0,""],[0,4,"Giuliano",0,""],[0,4,"Yves",0,""],[0,4,"Cheng",0,""],[0,4,"Angelos",0,""],[0,4,"Leonie",0,""],[0,4,"Julia M.",0,""],[0,4,"Ruben",0,""],[0,4,"Lea",0,""],[0,4,"Maja",1,""],[0,4,"Frieda",0,""],[0,5,"Hera",0,""],[0,7,"Lazar",1,""],[0,7,"Thomas",1,""],[0,7,"Julia B.",1,""],[0,7,"Soraya",1,""],[0,7,"Samuel",1,""],[0,7,"Giuliano",1,""],[0,7,"Lina",1,""],[0,7,"Fabrice",1,""],[0,7,"Sara",0,""],[0,7,"Marlon",1,""],[0,7,"Adriana",1,""],[0,7,"Cheng",1,""],[0,7,"Angelos",1,""],[0,7,"Leonie",1,""],[0,7,"Emilio",1,""],[0,7,"Arijan",1,""],[0,7,"Lorin",1,""],[0,7,"Mariana",1,""],[0,7,"Guilherme",1,""],[0,7,"Natalija",1,""],[0,7,"Anthony",1,""],[0,7,"Julia M.",1,""],[0,7,"Danija",0,""],[0,7,"Ruben",0,""],[0,7,"Lea",0,""],[0,7,"Frieda",0,""],[0,7,"Fabian",0,""],[0,7,"Damian",0,""],[0,7,"Andjela",1,""],[0,7,"Illia",0,""],[1,0,"Enie",1,""],[1,0,"Lazar",0,""],[1,0,"Cihan",1,""],[1,0,"Thomas",0,""],[1,0,"Soraya",0,""],[1,0,"Emilia",1,""],[1,0,"Samuel",0,""],[1,0,"Giuliano",0,""],[1,0,"Fabrice",1,""],[1,0,"Ariola",0,""],[1,0,"Yves",0,""],[1,0,"Leonie",0,""],[1,0,"Arijan",0,""],[1,0,"Mariana",0,""],[1,0,"Ruben",0,""],[1,0,"Aneesh",0,""],[1,0,"Lea",0,""],[1,0,"Giuliana",0,""],[1,1,"Bahoz",0,""],[1,1,"Enie",0,""],[1,1,"Cihan",1,""],[1,1,"Fabrice",0,""],[1,1,"Yves",0,""],[1,1,"Arijan",0,""],[1,1,"Mariana",0,""],[1,2,"Selma",0,""],[1,2,"Hera",0,""],[1,3,"Enie",0,""],[1,3,"Lazar",0,""],[1,3,"Cihan",0,""],[1,3,"Fabrice",0,""],[1,3,"Bahoz",0,""],[1,3,"David",0,""],[1,3,"Aneesh",0,""],[1,3,"Andjela",0,""],[1,3,"Lira",0,""],[1,3,"Mara",0,""],[1,3,"Celine",0,""],[1,3,"Timur",0,""],[1,3,"Sara",0,""],[1,3,"Marlon",0,""],[1,3,"Emilio",0,""],[1,3,"Lorin",0,""],[1,3,"Natalija",0,""],[1,3,"Anthony",0,""],[1,3,"Amelie",0,""],[1,3,"Fabian",0,""],[1,3,"Damian",0,""],[1,3,"Illia",0,""],[1,3,"Alessia",0,""],[1,3,"Jana",0,""],[1,4,"Lira",0,""],[1,4,"Julia B.",0,""],[1,4,"Mara",0,""],[1,4,"Celine",0,""],[1,4,"Lina",0,""],[1,4,"Nathan",0,""],[1,4,"Nico",0,""],[1,4,"Timur",0,""],[1,4,"Sara",1,""],[1,4,"Selma",1,""],[1,4,"Marlon",0,""],[1,4,"Adriana",0,""],[1,4,"Cheng",0,""],[1,4,"Angelos",0,""],[1,4,"Emilio",0,""],[1,4,"Marwin",0,""],[1,4,"Lorin",0,""],[1,4,"Guilherme",0,""],[1,4,"Njegoš",0,""],[1,4,"Natalija",0,""],[1,4,"Anthony",0,""],[1,4,"Julia M.",0,""],[1,4,"Danija",0,""],[1,4,"Jano",0,""],[1,4,"Amelie",1,""],[1,4,"Maja",1,""],[1,4,"Frieda",0,""],[1,4,"Fabian",0,""],[1,4,"Damian",0,""],[1,4,"Raiyah",1,""],[1,4,"Illia",0,""],[1,4,"Alessia",1,""],[1,4,"Jana",0,""],[1,4,"Hera",0,""],[1,5,"Soraya",0,""],[1,5,"Emilia",0,""],[1,5,"Celine",0,""],[1,5,"Nathan",0,""],[1,5,"Nico",1,""],[1,5,"Marwin",0,""],[1,5,"Njegoš",0,""],[1,5,"Julia M.",0,""],[1,5,"Danija",0,""],[1,5,"Ruben",0,""],[1,5,"Jano",0,""],[1,5,"Frieda",0,""],[1,5,"Giuliana",0,""],[1,5,"Raiyah",0,""],[1,5,"Alessia",0,"Musik bis 14.00"],[1,5,"Jana",0,""],[1,7,"Enie",0,""],[1,7,"Lazar",0,""],[1,7,"Lira",0,""],[1,7,"Emilia",0,""],[1,7,"Mara",0,""],[1,7,"Celine",0,""],[1,7,"Fabrice",0,""],[1,7,"Nathan",0,""],[1,7,"Ariola",0,""],[1,7,"Timur",0,""],[1,7,"Bahoz",0,""],[1,7,"Yves",0,""],[1,7,"Marlon",0,""],[1,7,"Cheng",0,""],[1,7,"Emilio",0,""],[1,7,"Marwin",0,""],[1,7,"Arijan",0,""],[1,7,"Lorin",0,""],[1,7,"Mariana",0,""],[1,7,"Julia M.",0,""],[1,7,"Danija",0,""],[1,7,"Ruben",0,""],[1,7,"Maja",0,""],[1,7,"Damian",0,""],[1,7,"Alessia",0,""],[1,7,"Jana",0,""],[2,0,"Enie",0,""],[2,0,"Cihan",0,""],[2,0,"Lira",1,""],[2,0,"Julia B.",0,""],[2,0,"Soraya",0,""],[2,0,"Emilia",1,""],[2,0,"Samuel",1,""],[2,0,"Mara",1,""],[2,0,"Celine",1,""],[2,0,"Lina",0,""],[2,0,"Fabrice",1,""],[2,0,"Nathan",0,""],[2,0,"Nico",0,""],[2,0,"Ariola",0,""],[2,0,"Timur",1,""],[2,0,"Bahoz",0,""],[2,0,"Yves",0,""],[2,0,"Marlon",1,""],[2,0,"Adriana",0,""],[2,0,"Cheng",0,""],[2,0,"Emilio",0,""],[2,0,"Marwin",1,""],[2,0,"Arijan",0,""],[2,0,"Lorin",1,""],[2,0,"Mariana",0,""],[2,0,"Guilherme",0,""],[2,0,"Njegoš",0,""],[2,0,"Julia M.",0,""],[2,0,"Danija",1,""],[2,0,"Ruben",0,""],[2,0,"Jano",1,""],[2,0,"Maja",0,""],[2,0,"Frieda",1,""],[2,0,"Fabian",1,""],[2,0,"Giuliana",0,""],[2,0,"Andjela",0,""],[2,0,"Raiyah",1,""],[2,0,"Alessia",1,""],[2,0,"Jana",1,""],[2,1,"Lazar",0,""],[2,1,"Thomas",0,""],[2,1,"Giuliano",0,""],[2,1,"Sara",0,""],[2,1,"Angelos",0,""],[2,1,"Leonie",0,""],[2,1,"Natalija",0,""],[2,1,"Aneesh",0,""],[2,1,"Amelie",0,""],[2,1,"Lea",0,""],[2,1,"Illia",0,""],[2,1,"Cihan",0,""],[2,1,"Soraya",0,""],[2,1,"Emilia",0,""],[2,1,"Samuel",0,""],[2,1,"Celine",0,""],[2,1,"Marlon",1,""],[2,1,"Lorin",1,""],[2,1,"Ruben",0,""],[2,1,"Andjela",0,""],[2,1,"Alessia",1,""],[2,2,"Enie",0,""],[2,2,"Lazar",0,""],[2,2,"Thomas",0,""],[2,2,"Giuliano",0,""],[2,2,"Fabrice",0,""],[2,2,"Ariola",0,""],[2,2,"Yves",0,""],[2,2,"Leonie",0,""],[2,2,"Arijan",0,""],[2,2,"Mariana",0,""],[2,2,"Aneesh",0,""],[2,2,"Lea",0,""],[2,2,"Giuliana",0,""],[2,2,"Cihan",0,""],[2,2,"Soraya",0,""],[2,2,"Emilia",0,""],[2,2,"Samuel",0,""],[2,2,"Ruben",0,""],[2,3,"Selma",0,""],[2,3,"Hera",0,""],[2,4,"Enie",1,""],[2,4,"Lira",0,""],[2,4,"Julia B.",0,""],[2,4,"Mara",0,""],[2,4,"Lina",0,""],[2,4,"Fabrice",0,""],[2,4,"Timur",0,""],[2,4,"Yves",1,""],[2,4,"Marlon",0,""],[2,4,"Adriana",1,""],[2,4,"Cheng",1,""],[2,4,"Emilio",0,""],[2,4,"Arijan",0,""],[2,4,"Lorin",0,""],[2,4,"Maja",0,""],[2,4,"Fabian",0,""],[2,4,"Damian",1,""],[3,0,"Enie",1,""],[3,0,"Lira",1,""],[3,0,"Julia B.",1,""],[3,0,"Soraya",1,""],[3,0,"Emilia",0,""],[3,0,"Mara",1,""],[3,0,"Celine",1,""],[3,0,"Lina",1,""],[3,0,"Fabrice",1,""],[3,0,"Nathan",1,""],[3,0,"Nico",1,""],[3,0,"Timur",1,""],[3,0,"Yves",0,""],[3,0,"Marlon",1,""],[3,0,"Adriana",0,""],[3,0,"Cheng",0,""],[3,0,"Emilio",1,""],[3,0,"Marwin",0,""],[3,0,"Arijan",0,""],[3,0,"Lorin",1,""],[3,0,"Njegoš",1,""],[3,0,"Julia M.",1,""],[3,0,"Danija",1,""],[3,0,"Ruben",0,""],[3,0,"Jano",1,""],[3,0,"Maja",1,""],[3,0,"Frieda",1,""],[3,0,"Fabian",1,""],[3,0,"Giuliana",1,""],[3,0,"Damian",0,""],[3,0,"Raiyah",1,""],[3,0,"Alessia",1,""],[3,0,"Jana",1,""],[3,1,"Enie",0,""],[3,1,"Lira",1,""],[3,1,"Julia B.",1,""],[3,1,"Soraya",1,""],[3,1,"Emilia",0,""],[3,1,"Mara",1,""],[3,1,"Celine",1,""],[3,1,"Lina",1,""],[3,1,"Fabrice",0,""],[3,1,"Nathan",0,""],[3,1,"Nico",0,""],[3,1,"Timur",0,""],[3,1,"Yves",0,""],[3,1,"Marlon",0,""],[3,1,"Adriana",0,""],[3,1,"Cheng",0,""],[3,1,"Emilio",1,""],[3,1,"Marwin",0,""],[3,1,"Arijan",0,""],[3,1,"Lorin",0,""],[3,1,"Njegoš",1,""],[3,1,"Julia M.",0,""],[3,1,"Danija",1,""],[3,1,"Ruben",0,""],[3,1,"Jano",1,""],[3,1,"Maja",0,""],[3,1,"Frieda",0,""],[3,1,"Fabian",1,""],[3,1,"Giuliana",1,""],[3,1,"Damian",0,""],[3,1,"Raiyah",1,""],[3,1,"Alessia",1,""],[3,1,"Jana",1,""],[3,2,"Selma",0,""],[3,2,"Hera",0,""],[3,3,"Nico",0,""],[3,3,"Guilherme",0,""],[3,3,"Illia",1,""],[3,3,"Anthony",0,""],[3,3,"Andjela",0,""],[3,3,"Julia M.",0,""],[3,3,"Hera",1,""],[3,4,"Njegoš",0,""],[3,4,"Julia B.",0,""],[3,4,"Lina",0,""],[3,4,"Nico",0,""],[3,4,"Sara",0,""],[3,4,"Selma",0,""],[3,4,"Marlon",0,""],[3,4,"Adriana",1,""],[3,4,"Angelos",0,""],[3,4,"Lorin",0,""],[3,4,"Guilherme",1,""],[3,4,"Natalija",1,""],[3,4,"Anthony",0,""],[3,4,"Danija",0,""],[3,4,"Amelie",1,""],[3,4,"Andjela",1,""],[3,4,"Raiyah",1,""],[3,4,"Illia",1,""],[3,4,"Julia M.",0,""],[3,4,"Hera",1,""],[3,6,"Enie",0,""],[3,6,"Ariola",0,""],[3,6,"Amelie",0,""],[3,6,"Raiyah",0,""],[3,6,"Jana",0,""],[3,7,"Lazar",1,""],[3,7,"Adriana",1,""],[3,7,"Natalija",1,""],[3,7,"Anthony",0,""],[3,7,"Fabian",0,""],[3,7,"Damian",1,""],[3,7,"Lina",0,""],[4,0,"Samuel",0,""],[4,0,"Giuliano",1,""],[4,0,"Lina",1,""],[4,0,"Nico",1,""],[4,0,"Sara",1,""],[4,0,"Adriana",0,""],[4,0,"Angelos",1,""],[4,0,"Leonie",1,""],[4,0,"Guilherme",1,""],[4,0,"Njegoš",1,""],[4,0,"David",1,""],[4,0,"Anthony",1,""],[4,0,"Aneesh",1,""],[4,0,"Jano",1,""],[4,0,"Amelie",1,""],[4,0,"Lea",1,""],[4,0,"Frieda",1,""],[4,0,"Fabian",1,""],[4,0,"Giuliana",1,""],[4,0,"Andjela",0,""],[4,0,"Raiyah",0,""],[4,0,"Illia",0,""],[4,1,"Soraya",0,""],[4,1,"Samuel",0,""],[4,1,"Giuliano",1,""],[4,1,"Lina",1,""],[4,1,"Nico",0,""],[4,1,"Sara",0,""],[4,1,"Adriana",0,""],[4,1,"Angelos",1,""],[4,1,"Leonie",0,""],[4,1,"Guilherme",0,""],[4,1,"Njegoš",1,""],[4,1,"David",1,""],[4,1,"Anthony",1,""],[4,1,"Aneesh",1,""],[4,1,"Jano",0,""],[4,1,"Amelie",0,""],[4,1,"Lea",1,""],[4,1,"Frieda",0,""],[4,1,"Fabian",0,""],[4,1,"Giuliana",0,""],[4,1,"Andjela",0,""],[4,1,"Raiyah",0,""],[4,1,"Illia",0,""],[4,2,"Bahoz",0,""],[4,2,"Selma",0,""],[4,2,"Mariana",0,""],[4,2,"Giuliano",0,""],[4,2,"Thomas",0,""],[4,2,"Samuel",0,""],[4,2,"Leonie",0,""],[4,2,"Sara",0,""],[4,2,"Angelos",0,""],[4,2,"Anthony",0,""],[4,2,"Guilherme",0,""],[4,2,"David",0,""],[4,2,"Lea",1,""],[4,2,"Aneesh",1,""],[4,2,"Amelie",0,""],[4,2,"Hera",1,""],[4,2,"Andjela",0,""],[4,2,"Illia",0,""],[4,5,"Julia B.",0,""],[4,5,"Giuliano",0,""],[4,5,"Lina",0,""],[4,5,"Nathan",1,""],[4,5,"Nico",0,""],[4,5,"Ariola",1,""],[4,5,"Bahoz",1,""],[4,5,"Sara",0,""],[4,5,"Selma",0,""],[4,5,"Adriana",0,""],[4,5,"Angelos",0,""],[4,5,"Leonie",0,""],[4,5,"Marwin",1,""],[4,5,"Arijan",1,""],[4,5,"Mariana",1,""],[4,5,"Guilherme",0,""],[4,5,"Njegoš",0,""],[4,5,"Natalija",0,""],[4,5,"David",0,""],[4,5,"Anthony",0,""],[4,5,"Danija",0,""],[4,5,"Aneesh",0,""],[4,5,"Jano",0,""],[4,5,"Amelie",0,""],[4,5,"Lea",0,""],[4,5,"Giuliana",0,""],[4,5,"Damian",1,""],[4,5,"Andjela",0,""],[4,5,"Raiyah",0,""],[4,5,"Illia",0,""],[4,5,"Hera",0,""],[4,6,"Emilia",1,""],[4,6,"Mara",0,""],[4,6,"Fabrice",1,""],[4,6,"Nathan",1,""],[4,6,"Ariola",1,""],[4,6,"Timur",1,""],[4,6,"Bahoz",1,""],[4,6,"Yves",1,""],[4,6,"Marlon",1,""],[4,6,"Cheng",1,""],[4,6,"Emilio",1,""],[4,6,"Marwin",1,""],[4,6,"Arijan",1,""],[4,6,"Lorin",1,""],[4,6,"Mariana",1,""],[4,6,"Julia M.",1,""],[4,6,"Danija",0,""],[4,6,"Ruben",0,""],[4,6,"Maja",0,""],[4,6,"Damian",1,""],[4,6,"Jana",1,""],[4,7,"Lira",1,""],[4,7,"Thomas",1,""],[4,7,"Julia B.",1,""],[4,7,"Soraya",1,""],[4,7,"Emilia",1,""],[4,7,"Samuel",1,""],[4,7,"Mara",1,""],[4,7,"Celine",1,""],[4,7,"Giuliano",1,""],[4,7,"Lina",1,""],[4,7,"Fabrice",1,""],[4,7,"Nathan",1,""],[4,7,"Nico",1,""],[4,7,"Ariola",1,""],[4,7,"Timur",1,""],[4,7,"Bahoz",1,""],[4,7,"Sara",1,""],[4,7,"Selma",1,""],[4,7,"Yves",1,""],[4,7,"Marlon",1,""],[4,7,"Adriana",1,""],[4,7,"Cheng",1,""],[4,7,"Angelos",1,""],[4,7,"Leonie",1,""],[4,7,"Emilio",1,""],[4,7,"Marwin",1,""],[4,7,"Arijan",1,""],[4,7,"Lorin",1,""],[4,7,"Mariana",1,""],[4,7,"Guilherme",1,""],[4,7,"Njegoš",1,""],[4,7,"Natalija",1,""],[4,7,"David",1,""],[4,7,"Anthony",1,""],[4,7,"Julia M.",1,""],[4,7,"Danija",1,""],[4,7,"Ruben",1,""],[4,7,"Aneesh",0,""],[4,7,"Jano",1,""],[4,7,"Amelie",1,""],[4,7,"Lea",1,""],[4,7,"Maja",1,""],[4,7,"Frieda",1,""],[4,7,"Fabian",1,""],[4,7,"Giuliana",1,""],[4,7,"Damian",1,""],[4,7,"Andjela",1,""],[4,7,"Raiyah",1,""],[4,7,"Illia",1,""],[4,7,"Alessia",1,""],[4,7,"Jana",1,""],[4,7,"Hera",0,""]];
+const pad=n=>String(n).padStart(2,"0");
+const toMin=s=>{const [h,m]=s.split(":").map(Number);return h*60+m;};
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+// laufende oder nächste LL-Lektion; nach Schulschluss bzw. am Wochenende: erste Lektion des nächsten Schultags
+function auto(){
+  const n=new Date(); let d=(n.getDay()+6)%7; const min=n.getHours()*60+n.getMinutes();
+  if(d<=4){
+    const has=l=>DATA.some(x=>x[0]===d&&x[1]===l);
+    for(let l=0;l<LES.length;l++){ if(toMin(LES[l].split("–")[1])>min && has(l)) return {d,l,live:true}; }
+  }
+  d=d>=4?0:d+1;
+  const first=LES.findIndex((_,l)=>DATA.some(x=>x[0]===d&&x[1]===l));
+  return {d,l:first,live:false};
+}
+let sel=null, resetT=null;   // null = automatisch
+function render(){
+  const a=auto(), cur=sel||a;
+  const n=new Date(); clk.innerHTML=`${pad(n.getHours())}:${pad(n.getMinutes())}<span>${pad(n.getSeconds())}</span>`;
+  const today=(n.getDay()+6)%7;
+  days.innerHTML=`<div class="chip jetzt ${sel?"":"on"}" data-auto="1">Jetzt</div>`+DAYS.map((d,i)=>`<div class="chip ${sel&&cur.d===i?"on":""}" data-d="${i}">${d}</div>`).join("");
+  const lesIdx=LES.map((_,l)=>l).filter(l=>DATA.some(x=>x[0]===cur.d&&x[1]===l));
+  les.innerHTML=lesIdx.map(l=>`<div class="chip ${cur.l===l?"on":""} ${a.live&&a.d===cur.d&&a.l===l?"now":""}" data-l="${l}">${LES[l]}</div>`).join("");
+  const list=DATA.filter(x=>x[0]===cur.d&&x[1]===cur.l).sort((x,y)=>x[2].localeCompare(y[2],"de-CH"));
+  const K=list.filter(x=>x[3]===1), M=list.filter(x=>x[3]===0);
+  const chip=x=>`<div class="nm">${esc(x[2])}${x[4]?`<small>${esc(x[4])}</small>`:""}</div>`;
+  lk.innerHTML=K.length?K.map(chip).join(""):'<div class="empty">Niemand darf in dieser Lektion kompensieren.</div>';
+  lm.innerHTML=M.length?M.map(chip).join(""):'<div class="empty">Niemand mit M in dieser Lektion.</div>';
+  nk.textContent=K.length; nm.textContent=M.length;
+  const lbl=sel?"Ausgewählt":(a.live?(cur.d===today?"Jetzt bzw. als Nächstes":""):"Nächster Schultag");
+  info.innerHTML=`${lbl?lbl+": ":""}<b>${DAYS[cur.d]}, ${LES[cur.l]}</b> · ${list.length} Lernende in der LL`+(sel?" · springt nach 2 Minuten zurück auf «Jetzt»":"");
+}
+function choose(p){ sel=p; clearTimeout(resetT); if(sel) resetT=setTimeout(()=>{sel=null;render();},2*60*1000); render(); }
+days.onclick=e=>{const t=e.target; if(t.dataset.auto) return choose(null); if(t.dataset.d===undefined) return;
+  const d=+t.dataset.d, first=LES.findIndex((_,l)=>DATA.some(x=>x[0]===d&&x[1]===l)); const a=auto();
+  choose({d,l:(a.d===d?a.l:first)});};
+les.onclick=e=>{const t=e.target; if(t.dataset.l===undefined) return; const a=auto(); choose({d:(sel||a).d,l:+t.dataset.l});};
+render(); setInterval(render,1000);
+</script>
+</body>
+</html>
