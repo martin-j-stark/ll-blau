@@ -621,6 +621,8 @@
         <input type="file" id="aImg" accept="image/*">
         <img class="preview" id="aPrev" alt="">
         <div class="row" style="margin-top:8px"><button class="btn danger" id="aImgDel">Bild entfernen</button></div>
+        <label>Anzeigen ab (optional, leer = sofort)</label>
+        <input type="text" id="aFrom" placeholder="TT.MM.JJJJ">
         <label>Anzeigen bis (optional, leer = unbegrenzt)</label>
         <input type="text" id="aUntil" placeholder="TT.MM.JJJJ">
         <div class="msg" id="aMsg"></div>
@@ -1018,6 +1020,7 @@ async function loadShared(){
 function infoValid(i){
   if(!i||!(i.text||i.title||i.img)) return false;
   if(i.until){const u=parseCH(i.until); if(u&&new Date()>u) return false;}
+  if(i.from){const f=parseCH(i.from); if(f&&new Date()<new Date(f.getFullYear(),f.getMonth(),f.getDate())) return false;}
   return true;
 }
 function renderInfo(){
@@ -1044,7 +1047,7 @@ pw.addEventListener("keydown",e=>{if(e.key==="Enter")doLogin.click();});
 doLogin.onclick=()=>{
   if(hash(pw.value)!==cfg().pwHash){loginMsg.className="msg err";loginMsg.textContent="Falsches Passwort.";return;}
   loginView.classList.add("hidden"); adminView.classList.remove("hidden");
-  const info=(sharedInfo&&sharedInfo.t?sharedInfo:store.get("info",{}))||{}; aTitle.value=info.title||""; aText.value=info.text||""; aUntil.value=info.until||"";
+  const info=(sharedInfo&&sharedInfo.t?sharedInfo:store.get("info",{}))||{}; aTitle.value=info.title||""; aText.value=info.text||""; aUntil.value=info.until||""; aFrom.value=info.from||"";
   pendingImg=undefined; aImg.value=""; aPrev.style.display=info.img?"block":"none"; if(info.img) aPrev.src=info.img;
   const c=cfg(); sUrl.value=c.calUrl; sProxy.value=c.proxy; sWeeks.value=c.weeks; sPw.value=""; aMsg.textContent=sMsg.textContent="";
 };
@@ -1087,8 +1090,8 @@ function ghErr(e){
 }
 aSave.onclick=async()=>{
   const old=sharedInfo&&sharedInfo.t?sharedInfo:store.get("info",{})||{};
-  if(aUntil.value.trim()&&!parseCH(aUntil.value)){aMsg.className="msg err";aMsg.textContent="Datum bitte als TT.MM.JJJJ eingeben.";return;}
-  const info={title:aTitle.value.trim(),text:aText.value.trim(),until:aUntil.value.trim(),img:pendingImg===undefined?old.img:pendingImg,t:Date.now()};
+  if((aUntil.value.trim()&&!parseCH(aUntil.value))||(aFrom.value.trim()&&!parseCH(aFrom.value))){aMsg.className="msg err";aMsg.textContent="Datum bitte als TT.MM.JJJJ eingeben.";return;}
+  const info={title:aTitle.value.trim(),text:aText.value.trim(),from:aFrom.value.trim(),until:aUntil.value.trim(),img:pendingImg===undefined?old.img:pendingImg,t:Date.now()};
   aMsg.className="msg";aMsg.textContent="Wird veröffentlicht…";
   try{
     await pushShared(info); sharedInfo=info; store.set("info",null);
@@ -1099,7 +1102,7 @@ aSave.onclick=async()=>{
   renderInfo();
 };
 aDel.onclick=async()=>{
-  aTitle.value=aText.value=aUntil.value="";aPrev.style.display="none";pendingImg=null;store.set("info",null);
+  aTitle.value=aText.value=aUntil.value=aFrom.value="";aPrev.style.display="none";pendingImg=null;store.set("info",null);
   aMsg.className="msg";aMsg.textContent="Wird gelöscht…";
   try{ await pushShared({}); sharedInfo={}; aMsg.className="msg ok";aMsg.textContent="✓ Gelöscht – verschwindet in ca. 1–2 Minuten überall."; }
   catch(e){ aMsg.className="msg err";aMsg.textContent=ghErr(e); }
