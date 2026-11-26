@@ -16,13 +16,12 @@ permissions:
   id-token: write
   actions: write
 
-concurrency:
-  group: pages
-  cancel-in-progress: true
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    concurrency:
+      group: pages-deploy
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -120,4 +119,8 @@ jobs:
           if [ "$D" -le 5 ] && [ "$H" -ge 6 ] && [ "$H" -lt 19 ]; then M=15; else M=60; fi
           echo "Nächster Abruf in $M Minuten"
           sleep $((M*60))
+          # Nur weitermachen, wenn inzwischen kein neuerer Durchlauf gestartet wurde (z. B. durch einen Upload)
+          ME=$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}" --jq .created_at)
+          NEWER=$(gh run list -R "${{ github.repository }}" --workflow kalender.yml -L 20 --json createdAt --jq "[.[] | select(.createdAt > \"$ME\")] | length")
+          if [ "$NEWER" -gt 0 ]; then echo "Neuerer Durchlauf vorhanden – diese Kette endet hier."; exit 0; fi
           gh workflow run kalender.yml --ref main -R "${{ github.repository }}"
